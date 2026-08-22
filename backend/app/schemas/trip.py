@@ -4,6 +4,15 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class TripStopSummary(BaseModel):
+    id: int
+    city_id: int
+    city_name: str
+    start_date: date
+    end_date: date
+    order_index: int
+
+
 class TripBase(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     start_date: date
@@ -34,3 +43,5 @@ class TripRead(TripBase):
     id: int
     user_id: int
     created_at: datetime
+    stop_count: int = 0
+    stops: list[TripStopSummary] = []
