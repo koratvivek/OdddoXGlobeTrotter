@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Camera, Edit2, LogOut, MapPin, Trash2 } from 'lucide-react';
+import { Edit2, MapPin, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { DestinationCard, EmptyState } from '@/components/gt/cards';
@@ -62,7 +62,7 @@ export function ProfilePage() {
       await unsaveDestination(cityId);
       setSavedDestinations((prev) => prev.filter((d) => d.city_id !== cityId));
       toast.success('Removed from saved destinations');
-    } catch (err) {
+    } catch {
       toast.error('Failed to remove destination');
     }
   };

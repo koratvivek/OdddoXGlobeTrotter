@@ -50,11 +50,7 @@ export function TripBudgetPage() {
   }, [id]);
 
   if (loading) {
-    return (
-      <AppShell title="Trip Budget">
-        <div className="h-72 animate-pulse rounded-2xl bg-secondary" />
-      </AppShell>
-    );
+    return <TripBudgetSkeleton />;
   }
 
   if (!trip || !budgetData) {
@@ -106,6 +102,74 @@ export function TripBudgetPage() {
             <li><strong>Meals:</strong> Estimated at $50 per day.</li>
             <li><strong>Other:</strong> Currently $0 as not tracked.</li>
           </ul>
+        </Card>
+      </div>
+    </AppShell>
+  );
+}
+
+export function TripBudgetSkeleton() {
+  return (
+    <AppShell title="Trip Budget" subtitle="..." actions={
+      <div className="h-8 w-28 bg-secondary/60 animate-pulse rounded-full" />
+    }>
+      <div className="space-y-6 animate-pulse">
+        {/* BudgetSummary Card Skeleton */}
+        <Card className="rounded-2xl border border-border p-5 shadow-card bg-card space-y-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="space-y-1.5">
+                <div className="h-3.5 w-16 bg-secondary/50 rounded" />
+                <div className="h-5 w-24 bg-secondary/60 rounded" />
+              </div>
+            ))}
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <div className="h-3.5 w-16 bg-secondary/50 rounded" />
+              <div className="h-3.5 w-10 bg-secondary/50 rounded" />
+            </div>
+            <div className="h-2 w-full bg-secondary/40 rounded-full" />
+          </div>
+        </Card>
+
+        {/* Donut and Bar Cards Skeleton */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Donut Skeleton */}
+          <Card className="rounded-2xl border border-border p-5 shadow-card space-y-4 bg-card">
+            <div className="h-4.5 w-32 bg-secondary/60 rounded" />
+            <div className="flex justify-center py-2">
+              <div className="h-36 w-36 rounded-full border-[10px] border-secondary/40 bg-transparent flex items-center justify-center">
+                <div className="h-16 w-16 rounded-full bg-background border border-border" />
+              </div>
+            </div>
+          </Card>
+
+          {/* Bar Skeleton */}
+          <Card className="rounded-2xl border border-border p-5 shadow-card space-y-4 bg-card">
+            <div className="h-4.5 w-36 bg-secondary/60 rounded" />
+            <div className="space-y-2.5 pt-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="space-y-1">
+                  <div className="flex justify-between">
+                    <div className="h-3 w-16 bg-secondary/45 rounded" />
+                    <div className="h-3 w-20 bg-secondary/45 rounded" />
+                  </div>
+                  <div className="h-2.5 w-full bg-secondary/40 rounded-full" />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Calculation Info Card Skeleton */}
+        <Card className="rounded-2xl border border-border p-5 shadow-card space-y-3 bg-card">
+          <div className="h-5 w-32 bg-secondary/65 rounded" />
+          <div className="space-y-2 pt-1">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-4 w-5/6 bg-secondary/45 rounded" />
+            ))}
+          </div>
         </Card>
       </div>
     </AppShell>

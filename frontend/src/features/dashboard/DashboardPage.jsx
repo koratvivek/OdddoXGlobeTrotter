@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Compass, Map, Plus, TrendingUp, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppShell } from '@/components/gt/app-shell';
 import { BudgetDonut } from '@/components/gt/budget';
-import { DestinationCard, EmptyState, LoadingGrid, StatCard, TripCard } from '@/components/gt/cards';
+import { DestinationCard, DestinationCardSkeleton, BudgetDonutSkeleton, EmptyState, LoadingGrid, StatCard, TripCard } from '@/components/gt/cards';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,6 +14,7 @@ import { budgetTotal, currency, tripStatus } from '@/lib/trip-utils';
 import { fetchAllCities, fetchTripBudget, fetchTrips } from '@/lib/trips-api';
 
 export function DashboardPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { saved, toggleSaved } = useSavedDestinations();
   const [trips, setTrips] = useState([]);
@@ -184,22 +185,30 @@ export function DashboardPage() {
               </Button>
             </div>
             <div className="scroll-row sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible xl:grid-cols-3">
-              {recommended.map((c) => (
-                <DestinationCard
-                  key={c.id}
-                  city={c}
-                  saved={saved.includes(c.id)}
-                  onSave={() => toggleSaved(c.id)}
-                  onAdd={() => toast.success(`${c.name} saved to your shortlist`)}
-                  className="w-64 shrink-0 sm:w-auto"
-                />
-              ))}
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <DestinationCardSkeleton key={i} />
+                ))
+              ) : (
+                recommended.map((c) => (
+                  <DestinationCard
+                    key={c.id}
+                    city={c}
+                    saved={saved.includes(c.id)}
+                    onSave={() => toggleSaved(c.id)}
+                    onAdd={() => navigate('/trips/new?recommend_city_id=' + c.id)}
+                    className="w-64 shrink-0 sm:w-auto"
+                  />
+                ))
+              )}
             </div>
           </div>
 
           <div className="space-y-4">
             <h2 className="text-xl font-bold">Budget highlights</h2>
-            {focusTripWithBudget ? (
+            {loading ? (
+              <BudgetDonutSkeleton />
+            ) : focusTripWithBudget ? (
               <Card className="space-y-4 rounded-2xl border-border p-5 shadow-card">
                 <div>
                   <p className="text-sm text-muted-foreground">Current trip</p>

@@ -88,11 +88,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/trips/:id/budget',
-    element: (
-      <PlaceholderWithShell title="Trip Budget" subtitle="Trip cost breakdown">
-        <TripBudgetPage />
-      </PlaceholderWithShell>
-    ),
+    element: <TripBudgetPage />,
   },
   { path: '*', element: <Navigate to="/dashboard" replace /> },
 ]);

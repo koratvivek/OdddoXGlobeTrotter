@@ -336,6 +336,43 @@ Complete user profile management, persistent saved content, and a comprehensive 
 - Created missing [`frontend/src/lib/apiClient.js`](frontend/src/lib/apiClient.js) implementing authenticated `fetch` wrapper and JWT session token storage.
 - Configured ESLint in [`frontend/eslint.config.js`](frontend/eslint.config.js) to ignore `dist/` and `node_modules/` folders.
 
+### Global Theme Toggle
+- Created [`frontend/src/hooks/useTheme.jsx`](frontend/src/hooks/useTheme.jsx) providing a React context for binary `'light'` / `'dark'` theme state, returning current theme and `toggleTheme` helper.
+- Persisted theme settings to `localStorage` under key `'gt_theme'`, defaulting to `'light'`.
+- Wrapped root React tree in [`frontend/src/app/App.jsx`](frontend/src/app/App.jsx) with `ThemeProvider`.
+- Implemented a global dark/light mode toggle `Button` in the header bar next to the search action inside [`frontend/src/components/gt/app-shell.jsx`](frontend/src/components/gt/app-shell.jsx) utilizing Lucide's `Sun` and `Moon` icons.
+
+### Create & Edit Trip Layout Improvements
+- Updated page header title in [`frontend/src/features/trips/CreateTripPage.jsx`](frontend/src/features/trips/CreateTripPage.jsx) to `"Create Trip"`.
+- Indented `Label` components using padding class `pl-1` to align cleaner with the input text values.
+- Enforced strict trip end date validation (`endDate <= startDate` throws error) in Step 2.
+- Refactored cover photo selection to uniquely identify preset cards by their respective city IDs.
+- Added client-side search, page-size limit dropdown (10, 20, 50), and frontend pagination inside Step 3, synchronizing state with URL search query params.
+- Implemented local storage auto-save and manual saving for draft trips under `'gt_trip_draft'`, reloading saved progress automatically upon route initialization, and removing the bottom Cancel button.
+- Added dirty state checks and React Router `useBlocker` route listener to throw warning notifications and prevent navigation if the user attempts to switch sidebar tabs with unsaved draft changes.
+- Added `min` datepicker constraint disabling prior start dates in the end date field, and auto-cleared invalid end dates if start date shifts.
+- Wrapped Step 3's destinations grid in a max-height container (`max-h-[380px]`) with vertical scrolling to eliminate the outer page scrollbar and keep actions fixed.
+- Added exact path matching (`end` prop) on sidebar NavLinks in [`frontend/src/components/gt/app-shell.jsx`](frontend/src/components/gt/app-shell.jsx) to prevent multiple sidebar menu highlights when creating a new trip.
+- Styled the "Edit" button in [`frontend/src/features/trips/TripOverviewPage.jsx`](frontend/src/features/trips/TripOverviewPage.jsx) to use primary filled styling instead of outline.
+- Extracted cover selection into a reusable [`frontend/src/components/gt/CoverPhotoSelector.jsx`](frontend/src/components/gt/CoverPhotoSelector.jsx) component complete with client-side text filtering, pagination grid, and custom file uploads.
+- Refactored [`frontend/src/features/trips/EditTripPage.jsx`](frontend/src/features/trips/EditTripPage.jsx) to feature a responsive two-column grid placing Trip Basics and Dates & Budget side-by-side, enforcing min end dates, and loading the new `CoverPhotoSelector` component.
+- Optimized draft restoration in [`frontend/src/features/trips/CreateTripPage.jsx`](frontend/src/features/trips/CreateTripPage.jsx) by parsing `localStorage` values inside the initial state hook setup, removing the initial 500ms blank field rendering.
+- Implemented pulsey skeleton card loaders inside Step 1 (cover selections) and Step 3 (destination picker grids) while the cities list resolves asynchronously from the backend database.
+- Integrated automatic pre-filling of Create Trip wizard variables (setting trip name and pre-selecting target destination) when clicking the "Add to Trip" buttons on recommended destination cards inside [`frontend/src/features/dashboard/DashboardPage.jsx`](frontend/src/features/dashboard/DashboardPage.jsx) and [`frontend/src/features/catalog/CatalogPage.jsx`](frontend/src/features/catalog/CatalogPage.jsx).
+- Enforced input filtering constraints on planned budget inputs to restrict inputs to positive integers of maximum length 7 digits inside [`frontend/src/features/trips/CreateTripPage.jsx`](frontend/src/features/trips/CreateTripPage.jsx) and [`frontend/src/features/trips/EditTripPage.jsx`](frontend/src/features/trips/EditTripPage.jsx).
+- Refactored [`frontend/src/components/gt/CoverPhotoSelector.jsx`](frontend/src/components/gt/CoverPhotoSelector.jsx) to display 3 randomly shuffled preset photo choices (guaranteeing currently selected photo is one of them) alongside custom upload and a "View more" button card.
+- Implemented an overlays search dialog modal inside `CoverPhotoSelector` displaying the full searchable presets list with scrollbar constraints, auto-closing upon photo selection.
+- Refactored [`frontend/src/components/gt/cards.jsx`](frontend/src/components/gt/cards.jsx) to make `TripCard` height stretch equally across layout rows (`flex h-full flex-col`) and pinned the "View Trip" button row to the bottom of all cards (`mt-auto`) to solve unequal height shifting issues when rendering trip progress indicators.
+- Created premium custom skeleton components (`TripCardSkeleton`, `DestinationCardSkeleton`, and `BudgetDonutSkeleton`) inside [`frontend/src/components/gt/cards.jsx`](frontend/src/components/gt/cards.jsx) matching the geometry of loaded cards.
+- Integrated `DestinationCardSkeleton` and `BudgetDonutSkeleton` inside [`frontend/src/features/dashboard/DashboardPage.jsx`](frontend/src/features/dashboard/DashboardPage.jsx) to show custom skeletons for recommended destinations and budget highlights while loading.
+- Implemented `EditTripFormSkeleton` inside [`frontend/src/features/trips/EditTripPage.jsx`](frontend/src/features/trips/EditTripPage.jsx) to display a detailed form skeleton during load.
+- Implemented `TripOverviewSkeleton` inside [`frontend/src/features/trips/TripOverviewPage.jsx`](frontend/src/features/trips/TripOverviewPage.jsx) to show proper banner and stops list skeleton indicators during load.
+- Resolved double-nested AppShell layout bug by mapping `<TripBudgetPage />` directly on the `/trips/:id/budget` route inside [`frontend/src/routes/index.jsx`](frontend/src/routes/index.jsx) (removing duplicate `PlaceholderWithShell` wrapper), which eliminates the duplicate header and aligns search/account actions correctly in the center layout.
+- Implemented `TripBudgetSkeleton` inside [`frontend/src/features/budget/TripBudgetPage.jsx`](frontend/src/features/budget/TripBudgetPage.jsx) mimicking budget details, charts, cost grids, and calculation guides.
+- Created `ActivityCardSkeleton` inside [`frontend/src/components/gt/cards.jsx`](frontend/src/components/gt/cards.jsx) mimicking the layout of activity items.
+- Integrated `DestinationCardSkeleton`, `ActivityCardSkeleton`, and custom inspiration loaders inside the Explore tab [`frontend/src/features/catalog/CatalogPage.jsx`](frontend/src/features/catalog/CatalogPage.jsx) to display proper skeleton screens for popular destinations, recommendations, popular activities, and travel inspiration while loading.
+- Resolved merge conflict in `CatalogPage.jsx` using `useSavedDestinations` Hook bookmarks sync and route `navigate` redirects.
+
 ---
 
 ## How to run (current)

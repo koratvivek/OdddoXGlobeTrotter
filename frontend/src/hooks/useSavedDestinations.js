@@ -65,7 +65,7 @@ export function useSavedDestinations() {
           } else {
             await saveDestination(cityId);
           }
-        } catch (err) {
+        } catch {
           toast.error('Failed to sync saved destination');
           // Revert optimistic update
           setSaved((prev) =>

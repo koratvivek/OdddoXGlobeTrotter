@@ -6,6 +6,7 @@ import {
   CalendarDays,
   Clock,
   MapPin,
+  Pencil,
   Plus,
   Share2,
   Trash2,
@@ -465,11 +466,7 @@ export function TripOverviewPage() {
   }, [load]);
 
   if (loading) {
-    return (
-      <AppShell title="Itinerary Builder">
-        <div className="h-64 animate-pulse rounded-2xl bg-secondary" />
-      </AppShell>
-    );
+    return <TripOverviewSkeleton />;
   }
 
   if (notFound || !trip) return <TripNotFound title="Itinerary Builder" />;
@@ -487,8 +484,11 @@ export function TripOverviewPage() {
       subtitle={`${formatRange(trip.startDate, trip.endDate)} · ${stops.length} destinations`}
       actions={
         <>
-          <Button asChild size="sm" variant="ghost" className="hidden rounded-full sm:inline-flex">
-            <Link to={`/trips/${trip.id}/edit`}>Edit trip</Link>
+          <Button asChild size="sm" className="hidden rounded-full sm:inline-flex">
+            <Link to={`/trips/${trip.id}/edit`}>
+              <Pencil className="mr-1 h-4 w-4" />
+              Edit
+            </Link>
           </Button>
           <Button size="sm" variant="outline" className="rounded-full" onClick={share}>
             <Share2 className="mr-1 h-4 w-4" />
@@ -555,6 +555,55 @@ export function TripOverviewPage() {
           ))}
           <AddStopDialog trip={trip} cities={cities} onAdded={load} />
         </div>
+      </div>
+    </AppShell>
+  );
+}
+
+export function TripOverviewSkeleton() {
+  return (
+    <AppShell title="Trip overview" subtitle="..." actions={
+      <div className="h-8 w-20 bg-secondary/60 animate-pulse rounded-full" />
+    }>
+      <div className="space-y-6 animate-pulse">
+        {/* Large cover image placeholder */}
+        <div className="h-56 w-full rounded-3xl bg-secondary/40 sm:h-72" />
+
+        {/* 3 summary cards grid */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="rounded-2xl border border-border p-4 shadow-card space-y-2 bg-card">
+              <div className="h-3.5 w-16 bg-secondary/50 rounded" />
+              <div className="h-5 w-24 bg-secondary/60 rounded" />
+            </Card>
+          ))}
+        </div>
+
+        {/* Description placeholder */}
+        <Card className="rounded-2xl border border-border p-5 shadow-card space-y-2.5 bg-card">
+          <div className="h-4.5 w-28 bg-secondary/65 rounded" />
+          <div className="h-3.5 w-full bg-secondary/45 rounded" />
+          <div className="h-3.5 w-5/6 bg-secondary/45 rounded" />
+        </Card>
+
+        {/* Stops list card placeholder */}
+        <Card className="rounded-2xl border border-border p-5 shadow-card space-y-4 bg-card">
+          <div className="flex justify-between items-center">
+            <div className="h-5 w-20 bg-secondary/65 rounded" />
+            <div className="h-8 w-28 bg-secondary/70 rounded-full" />
+          </div>
+          <div className="space-y-3">
+            {[1, 2].map((i) => (
+              <div key={i} className="flex items-center gap-4 rounded-xl border border-border p-3 bg-secondary/10">
+                <div className="h-8 w-8 rounded-full bg-secondary/50 animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-32 bg-secondary/55 rounded" />
+                  <div className="h-3 w-20 bg-secondary/40 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
     </AppShell>
   );
