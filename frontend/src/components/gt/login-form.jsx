@@ -24,13 +24,7 @@ export function LoginScreen() {
     if (ready && user) navigate('/dashboard', { replace: true });
   }, [ready, user, navigate]);
 
-  const validatePassword = (pw) => {
-    if (pw.length < 8) return 'Password must be at least 8 characters.';
-    if (!/[A-Z]/.test(pw)) return 'Password must contain at least one uppercase letter.';
-    if (!/[0-9]/.test(pw)) return 'Password must contain at least one number.';
-    if (!/[^A-Za-z0-9]/.test(pw)) return 'Password must contain at least one special character.';
-    return null;
-  };
+
 
   const submit = async (e) => {
     e.preventDefault();
@@ -39,9 +33,8 @@ export function LoginScreen() {
       setError('Enter a valid email address.');
       return;
     }
-    const pwError = validatePassword(password);
-    if (pwError) {
-      setError(pwError);
+    if (!password) {
+      setError('Enter your password.');
       return;
     }
     setLoading(true);
@@ -107,9 +100,7 @@ export function LoginScreen() {
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Must be 8+ chars with an uppercase letter, number &amp; special character.
-          </p>
+
         </div>
         {error && (
           <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
