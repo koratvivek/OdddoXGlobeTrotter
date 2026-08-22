@@ -5,8 +5,8 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
-  Compass,
-  Home,
+  
+  Home,Compass,
   LogOut,
   Map,
   Menu,
