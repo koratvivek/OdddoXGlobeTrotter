@@ -12,7 +12,6 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { Map, Plus, TrendingUp, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/gt/app-shell";
 import { BudgetDonut } from "@/components/gt/budget";
