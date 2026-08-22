@@ -87,7 +87,21 @@ export const router = createBrowserRouter([
       </PlaceholderWithShell>
     ),
   },
-  { path: '/itinerary', element: <ItineraryPlaceholderPage /> },
-  { path: '/budget', element: <BudgetPlaceholderPage /> },
+  {
+    path: '/itinerary',
+    element: (
+      <PlaceholderWithShell title="Itinerary Builder" subtitle="Build your trip itinerary">
+        <ItineraryPlaceholderPage />
+      </PlaceholderWithShell>
+    ),
+  },
+  {
+    path: '/budget',
+    element: (
+      <PlaceholderWithShell title="Budget" subtitle="Trip cost breakdown">
+        <BudgetPlaceholderPage />
+      </PlaceholderWithShell>
+    ),
+  },
   { path: '*', element: <Navigate to="/dashboard" replace /> },
 ]);

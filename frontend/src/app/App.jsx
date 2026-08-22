@@ -6,8 +6,8 @@ import { router } from '@/routes';
 export function App() {
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
       <Toaster position="top-right" richColors />
+      <RouterProvider router={router} />
     </AuthProvider>
   );
 }
