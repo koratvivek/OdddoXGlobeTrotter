@@ -8,13 +8,13 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useStore } from '@/lib/store';
+import { useSavedDestinations } from '@/hooks/useSavedDestinations';
 import { apiClient } from '@/lib/apiClient';
 
 const categories = ["All", "Sightseeing", "Food", "Adventure", "Culture", "Relax", "Nightlife"];
 
 export function CatalogPage() {
-  const { saved, toggleSaved } = useStore();
+  const { saved, toggleSaved } = useSavedDestinations();
   const [query, setQuery] = useState("");
   const [region, setRegion] = useState("All");
   const [category, setCategory] = useState("All");

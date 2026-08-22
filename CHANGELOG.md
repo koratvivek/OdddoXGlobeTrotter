@@ -205,6 +205,97 @@ Working Explore screen with city and activity search/filter against seed data, d
 
 ---
 
+## Phase 4 — Itinerary Builder
+
+**Goal:** Allow users to build out a trip by adding stops and scheduling activities within those stops.
+
+**Branch:** `phase-4-itinerary`
+
+### Backend — Itinerary API
+
+- Implemented `app/services/stops.py` with CRUD for stops (`GET /stops/{id}`, `PATCH`, `DELETE`).
+- Re-index logic on stop deletion to maintain `order_index`.
+- Implemented `app/services/trip_activities.py` for `TripActivity` CRUD:
+  - `POST /trip-activities` to schedule an activity at a stop.
+  - `PATCH /trip-activities/{id}` to update date/time or cost.
+  - `DELETE /trip-activities/{id}` to remove an activity.
+- Updated endpoints in `stops.py` and `trip_activities.py`.
+
+### Frontend — Itinerary UI
+
+- Created `frontend/src/features/trips/TripItineraryPage.jsx` with full drag-and-drop or ordered list to view days, stops, and activities.
+- Allows adding activities from the catalog to specific stops and days.
+- Allows reordering stops and activities.
+
+### Phase 4 deliverable
+Full trip itinerary builder functionality, enabling users to schedule days and book activities to stops.
+
+---
+
+## Phase 5 — Budget & Cost Engine
+
+**Goal:** Integrate a real-time budget calculator comparing `budget_cap` with actual expenses from activities, accommodation, transport, and meals.
+
+**Branch:** `phase-5-budget`
+
+### Backend — Budget API
+
+- Implemented `app/services/budget.py` (`calculate_trip_cost`) aggregating:
+  - **Activities**: Sum of `cost_override` or `activity.cost`.
+  - **Accommodation**: `city.cost_index * nights`.
+  - **Transport**: Base fee * number of stops.
+  - **Meals**: Base daily fee * duration days.
+- Added `GET /trips/{id}/budget` returning a `TripBudgetResponse` with categories, total cost, remaining budget, and average per day.
+- Auth protected; owner-only access.
+
+### Frontend — Budget UI
+
+- Created `frontend/src/features/budget/TripBudgetPage.jsx`.
+- Uses `BudgetDonut` widget to visualize the breakdown of expenses.
+- Displays over-budget warnings and remaining budget.
+
+### Phase 5 deliverable
+A fully operational, dynamic budget calculator that reacts to itinerary changes in real-time.
+
+---
+
+## Phase 7 — Profile, Settings & Admin Analytics
+
+**Goal:** Implement user profile management, settings, a persistent saved destinations list, account deletion, and an admin analytics dashboard.
+
+**Branch:** `phase-7-profile-admin-analytics`
+
+### Backend — Profile & Admin APIs
+
+- **Profile & Saved Destinations:**
+  - `SavedDestination` join table created with unique constraint `(user_id, city_id)`.
+  - `GET /users/me/saved-destinations`, `POST`, `DELETE` endpoints for authoritative persistence.
+  - `DELETE /users/me` endpoint to permanently delete the user's account and all associated data.
+  - User model includes `saved_destinations` relationship (cascade delete).
+- **Admin Dashboard:**
+  - Added `get_current_admin` dependency ensuring `is_admin = True`.
+  - Admin endpoints: `/admin/overview`, `/admin/users`, `/admin/stats/trips`, `/admin/stats/cities`, `/admin/stats/activities`.
+  - Computes active user stats, trip funnels, popular cities (by stop count), and popular activities (by usage count).
+  - Updated `UserRead` schema to include dynamic `trip_count` for admin users view.
+
+### Frontend — Settings & Dashboard
+
+- **Profile & Settings:**
+  - `ProfilePage.jsx` to view/edit user bio, location, and name.
+  - `SettingsPage.jsx` to manage email and language preferences.
+  - Warning added about email change (no verification infrastructure built yet).
+  - Both pages include a "Danger Zone" for account deletion.
+- **Saved Destinations:**
+  - Re-wrote `useSavedDestinations.js` hook to synchronize with backend when authenticated, falling back to `localStorage` for guests.
+- **Admin Dashboard:**
+  - `AdminDashboardPage.jsx` implemented displaying key KPIs, popular destinations/activities tables, and a searchable user management table.
+  - Admin view protected by frontend routing and backend 403 blocks.
+
+### Phase 7 deliverable
+Complete user profile management, persistent saved content, and a comprehensive admin analytics suite.
+
+---
+
 ## Cross-phase notes
 
 | Area | Status after Phase 3 |
