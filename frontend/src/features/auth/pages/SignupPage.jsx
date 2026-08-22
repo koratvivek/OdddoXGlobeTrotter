@@ -67,7 +67,8 @@ export function SignupPage() {
         city: form.city || null,
         country: form.country || null,
         bio: form.bio || null,
-        photo: photo && !photo.startsWith('blob:') ? photo : null,
+        // Photo upload requires a dedicated file-upload endpoint (not yet built).
+        // For now, the profile photo is preview-only on the signup form.
       });
       toast.success('Account created — welcome aboard!');
       navigate('/dashboard');

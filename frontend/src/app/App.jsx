@@ -8,8 +8,8 @@ export function App() {
   return (
     <AuthProvider>
       <StoreProvider>
-        <RouterProvider router={router} />
         <Toaster position="top-right" richColors />
+        <RouterProvider router={router} />
       </StoreProvider>
     </AuthProvider>
   );

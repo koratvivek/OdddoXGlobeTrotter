@@ -3,8 +3,8 @@ import hero from '@/assets/hero.jpg';
 
 export function AuthLayout({ title, subtitle, children, wide }) {
   return (
-    <div className="grid min-h-screen bg-background lg:grid-cols-[1fr_minmax(0,1.05fr)]">
-      <div className="relative hidden lg:block">
+    <div className="grid h-screen bg-background lg:grid-cols-[1fr_minmax(0,1.05fr)]">
+      <div className="relative hidden overflow-hidden lg:block">
         <img
           src={hero}
           alt="Turquoise coastline seen from above"
@@ -24,7 +24,7 @@ export function AuthLayout({ title, subtitle, children, wide }) {
           </p>
         </div>
       </div>
-      <div className="flex items-center justify-center px-5 py-10 sm:px-10">
+      <div className="flex items-center justify-center overflow-y-auto px-5 py-10 sm:px-10">
         <div className={wide ? 'w-full max-w-2xl' : 'w-full max-w-md'}>
           <div className="flex items-center gap-2">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
