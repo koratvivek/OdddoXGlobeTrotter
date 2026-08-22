@@ -44,3 +44,29 @@ def test_signup_duplicate_email(client):
     assert client.post("/api/v1/auth/signup", json=payload).status_code == 201
     dup = client.post("/api/v1/auth/signup", json=payload)
     assert dup.status_code == 409
+
+
+def test_login_unknown_user_returns_404(client):
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "missing@example.com", "password": "password123"},
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "User not found."
+
+
+def test_login_wrong_password_returns_401(client):
+    client.post(
+        "/api/v1/auth/signup",
+        json={
+            "first_name": "Wrong",
+            "last_name": "Pass",
+            "email": "wrongpass@example.com",
+            "password": "password123",
+        },
+    )
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "wrongpass@example.com", "password": "not-the-password"},
+    )
+    assert response.status_code == 401

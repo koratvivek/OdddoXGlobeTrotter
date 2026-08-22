@@ -41,7 +41,12 @@ class AuthService:
     @staticmethod
     def login(db: Session, payload: LoginRequest) -> tuple[User, str]:
         user = db.query(User).filter(User.email == payload.email).first()
-        if not user or not verify_password(payload.password, user.password_hash):
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found.",
+            )
+        if not verify_password(payload.password, user.password_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password.",
