@@ -96,7 +96,7 @@ function EditTripForm({ trip, cities, onSaved }) {
 
     setSaving(true);
     try {
-      const coverPhoto = cover.startsWith('blob:') ? trip.coverImage : cover;
+      const coverPhoto = cover.startsWith('blob:') ? null : cover;
       await updateTrip(trip.id, {
         name: name.trim(),
         description: description.trim() || null,

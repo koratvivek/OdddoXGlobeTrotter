@@ -225,7 +225,7 @@ export function CreateTripPage() {
     }
     setSaving(true);
     try {
-      const coverPhoto = cover.startsWith('blob:') ? cities.find((c) => c.image === cover)?.image || null : cover;
+      const coverPhoto = cover.startsWith('blob:') ? null : cover;
       const trip = await createTrip({
         name: name.trim(),
         description: description.trim() || null,
