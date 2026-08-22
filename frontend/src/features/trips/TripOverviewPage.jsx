@@ -5,6 +5,7 @@ import {
   ArrowUp,
   CalendarDays,
   Clock,
+  GripVertical,
   MapPin,
   Pencil,
   Plus,
@@ -150,12 +151,36 @@ function AddActivityDialog({ stop, cityName, onAdded }) {
   }, [open, stop.cityId]);
 
   const add = async (activity) => {
+    let dateToUse = stop.startDate;
+    let timeToUse = '10:00:00';
+    
+    const acts = stop.activities || [];
+    if (acts.length > 0) {
+      const sorted = [...acts].sort((a, b) => {
+        const d = a.scheduledDate.localeCompare(b.scheduledDate);
+        if (d !== 0) return d;
+        return a.scheduledTime.localeCompare(b.scheduledTime);
+      });
+      const last = sorted[sorted.length - 1];
+      dateToUse = last.scheduledDate;
+      const [h, m] = last.scheduledTime.split(':');
+      let newH = Math.min(23, parseInt(h, 10) + 1);
+      timeToUse = `${newH.toString().padStart(2, '0')}:${m}:00`;
+      
+      // ensure we don't conflict with existing
+      while (acts.some((a) => a.scheduledDate === dateToUse && a.scheduledTime.substring(0, 5) === timeToUse.substring(0, 5))) {
+        newH = Math.min(23, newH + 1);
+        timeToUse = `${newH.toString().padStart(2, '0')}:${m}:00`;
+        if (newH === 23) break;
+      }
+    }
+
     try {
       await createTripActivity({
         stop_id: stop.id,
         activity_id: activity.id,
-        scheduled_date: stop.startDate,
-        scheduled_time: '10:00:00',
+        scheduled_date: dateToUse,
+        scheduled_time: timeToUse,
       });
       toast.success(`${activity.name} added`);
       setOpen(false);
@@ -258,6 +283,21 @@ function StopCard({ stop, index, total, cities, onChanged }) {
   };
 
   const patchActivity = async (taId, payload) => {
+    const target = sortedActivities.find((a) => a.id === taId);
+    const dateToCheck = payload.scheduled_date || target.scheduledDate;
+    const timeToCheck = payload.scheduled_time || target.scheduledTime;
+    
+    const conflict = sortedActivities.find((a) => 
+      a.id !== taId && 
+      a.scheduledDate === dateToCheck && 
+      a.scheduledTime.substring(0, 5) === timeToCheck.substring(0, 5)
+    );
+    
+    if (conflict) {
+      toast.error('Another activity is already scheduled at this time');
+      return;
+    }
+
     try {
       await updateTripActivity(taId, payload);
       onChanged();
@@ -292,6 +332,45 @@ function StopCard({ stop, index, total, cities, onChanged }) {
       onChanged();
     } catch (err) {
       toast.error(err.message || 'Failed to remove activity');
+    }
+  };
+
+  const handleDragStart = (e, idx) => {
+    e.dataTransfer.setData('text/plain', String(idx));
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.style.opacity = '0.5';
+  };
+
+  const handleDragEnd = (e) => {
+    e.currentTarget.style.opacity = '1';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, dropIdx) => {
+    e.preventDefault();
+    const dragIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (isNaN(dragIdx) || dragIdx === dropIdx) return;
+    
+    const source = sortedActivities[dragIdx];
+    const target = sortedActivities[dropIdx];
+    if (!source || !target) return;
+
+    try {
+      await updateTripActivity(source.id, {
+        scheduled_date: target.scheduledDate,
+        scheduled_time: target.scheduledTime.length === 5 ? `${target.scheduledTime}:00` : target.scheduledTime,
+      });
+      await updateTripActivity(target.id, {
+        scheduled_date: source.scheduledDate,
+        scheduled_time: source.scheduledTime.length === 5 ? `${source.scheduledTime}:00` : source.scheduledTime,
+      });
+      onChanged();
+    } catch (err) {
+      toast.error(err.message || 'Failed to reorder activity');
     }
   };
 
@@ -382,7 +461,18 @@ function StopCard({ stop, index, total, cities, onChanged }) {
           <p className="text-sm text-muted-foreground">No activities yet for this stop.</p>
         ) : (
           sortedActivities.map((ta, i) => (
-            <div key={ta.id} className="flex flex-wrap items-center gap-3 rounded-xl bg-secondary/60 p-3">
+            <div 
+              key={ta.id} 
+              draggable
+              onDragStart={(e) => handleDragStart(e, i)}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, i)}
+              className="flex flex-wrap items-center gap-3 rounded-xl bg-secondary/60 p-3 transition-opacity cursor-grab active:cursor-grabbing hover:bg-secondary/80"
+            >
+              <div className="flex items-center text-muted-foreground/50 hover:text-foreground shrink-0 cursor-grab px-1">
+                <GripVertical className="h-4 w-4" />
+              </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{ta.activityName}</p>
                 <p className="truncate text-xs text-muted-foreground">
@@ -402,26 +492,6 @@ function StopCard({ stop, index, total, cities, onChanged }) {
                 className="h-8 w-24 rounded-lg text-xs"
               />
               <div className="flex shrink-0">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8"
-                  disabled={i === 0}
-                  onClick={() => moveActivity(ta, -1, i)}
-                  aria-label="Move activity up"
-                >
-                  <ArrowUp className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8"
-                  disabled={i === sortedActivities.length - 1}
-                  onClick={() => moveActivity(ta, 1, i)}
-                  aria-label="Move activity down"
-                >
-                  <ArrowDown className="h-3.5 w-3.5" />
-                </Button>
                 <Button
                   size="icon"
                   variant="ghost"
