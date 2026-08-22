@@ -200,12 +200,16 @@ export function ProfilePage() {
             {savedDestinations.map((dest) => (
               <DestinationCard
                 key={dest.city_id}
-                id={dest.city_id}
-                name={dest.city_name}
-                country={dest.country}
-                image={dest.image_url}
-                isSaved={true}
-                onToggleSaved={() => handleUnsave(dest.city_id)}
+                city={{
+                  id: dest.city_id,
+                  name: dest.city_name,
+                  country: dest.country,
+                  image_url: dest.image_url,
+                  cost_index: 3,
+                  popularity_score: 5,
+                }}
+                saved={true}
+                onSave={() => handleUnsave(dest.city_id)}
               />
             ))}
           </div>
