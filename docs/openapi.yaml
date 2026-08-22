@@ -139,15 +139,45 @@ paths:
       summary: List trips for current user
       security:
         - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [all, upcoming, ongoing, completed]
+            default: all
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [date, name, budget]
+            default: date
       responses:
         '200':
-          description: Trip list
+          description: Paginated trip list
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TripRead'
+                $ref: '#/components/schemas/PaginatedTripRead'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       tags: [trips]
       summary: Create a trip
@@ -215,24 +245,35 @@ paths:
     get:
       tags: [cities]
       summary: List or search cities
+      security:
+        - bearerAuth: []
       parameters:
-        - name: q
+        - name: page
           in: query
           schema:
-            type: string
-        - name: country
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: q
           in: query
           schema:
             type: string
       responses:
         '200':
-          description: City list
+          description: Paginated city list
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CityRead'
+                $ref: '#/components/schemas/PaginatedCityRead'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       tags: [cities]
       summary: Create city (admin)
@@ -383,17 +424,30 @@ paths:
           required: true
           schema:
             type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Stop list
+          description: Paginated stop list
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StopRead'
+                $ref: '#/components/schemas/PaginatedStopRead'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       tags: [stops]
       summary: Create stop
@@ -856,11 +910,30 @@ components:
           format: decimal
           nullable: true
 
+    TripStopSummary:
+      type: object
+      required: [id, city_id, city_name, start_date, end_date, order_index]
+      properties:
+        id:
+          type: integer
+        city_id:
+          type: integer
+        city_name:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        order_index:
+          type: integer
+
     TripRead:
       allOf:
         - $ref: '#/components/schemas/TripCreate'
         - type: object
-          required: [id, user_id, created_at]
+          required: [id, user_id, created_at, stop_count, stops]
           properties:
             id:
               type: integer
@@ -869,6 +942,63 @@ components:
             created_at:
               type: string
               format: date-time
+            stop_count:
+              type: integer
+            stops:
+              type: array
+              items:
+                $ref: '#/components/schemas/TripStopSummary'
+
+    PaginatedTripRead:
+      type: object
+      required: [items, page, page_size, total, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TripRead'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+
+    PaginatedCityRead:
+      type: object
+      required: [items, page, page_size, total, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CityRead'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+
+    PaginatedStopRead:
+      type: object
+      required: [items, page, page_size, total, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/StopRead'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
 
     CityCreate:
       type: object
@@ -1005,6 +1135,9 @@ components:
           properties:
             id:
               type: integer
+            city_name:
+              type: string
+              nullable: true
 
     TripActivityCreate:
       type: object

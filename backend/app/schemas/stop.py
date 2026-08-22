@@ -26,3 +26,4 @@ class StopRead(StopBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    city_name: str | None = None

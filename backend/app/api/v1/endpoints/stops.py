@@ -1,6 +1,11 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
 
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
+from app.schemas.common import PaginatedResponse
 from app.schemas.stop import StopCreate, StopRead, StopUpdate
+from app.services.stops import StopService
 
 router = APIRouter(prefix="/stops", tags=["stops"])
 
@@ -12,14 +17,24 @@ def _not_implemented() -> None:
     )
 
 
-@router.get("", response_model=list[StopRead])
-def list_stops(trip_id: int | None = None) -> list[StopRead]:
-    _not_implemented()
+@router.get("", response_model=PaginatedResponse[StopRead])
+def list_stops(
+    trip_id: int = Query(...),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> PaginatedResponse[StopRead]:
+    return StopService.list_stops(db, current_user, trip_id, page, page_size)
 
 
 @router.post("", response_model=StopRead, status_code=status.HTTP_201_CREATED)
-def create_stop(_payload: StopCreate) -> StopRead:
-    _not_implemented()
+def create_stop(
+    payload: StopCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> StopRead:
+    return StopService.create_stop(db, current_user, payload)
 
 
 @router.get("/{stop_id}", response_model=StopRead)
