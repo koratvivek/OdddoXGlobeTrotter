@@ -1,5 +1,8 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.orm import Session
 
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
 from app.schemas.auth import (
     ForgotPasswordRequest,
     LoginRequest,
@@ -8,32 +11,31 @@ from app.schemas.auth import (
 )
 from app.schemas.common import MessageResponse
 from app.schemas.user import UserRead
+from app.services.auth import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def _not_implemented() -> None:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Endpoint not implemented yet.",
-    )
-
-
 @router.post("/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-def signup(_payload: SignupRequest) -> TokenResponse:
-    _not_implemented()
+def signup(payload: SignupRequest, db: Session = Depends(get_db)) -> TokenResponse:
+    _user, token = AuthService.signup(db, payload)
+    return TokenResponse(access_token=token)
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(_payload: LoginRequest) -> TokenResponse:
-    _not_implemented()
+def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
+    _user, token = AuthService.login(db, payload)
+    return TokenResponse(access_token=token)
 
 
 @router.post("/forgot-password", response_model=MessageResponse)
-def forgot_password(_payload: ForgotPasswordRequest) -> MessageResponse:
-    _not_implemented()
+def forgot_password(
+    payload: ForgotPasswordRequest, db: Session = Depends(get_db)
+) -> MessageResponse:
+    message = AuthService.forgot_password(db, payload.email)
+    return MessageResponse(message=message)
 
 
 @router.get("/me", response_model=UserRead)
-def get_me() -> UserRead:
-    _not_implemented()
+def get_me(current_user: User = Depends(get_current_user)) -> UserRead:
+    return AuthService.to_user_read(current_user)

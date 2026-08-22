@@ -43,7 +43,19 @@ uvicorn app.main:app --reload --port 8000
 
 Health check: http://localhost:8000/health
 
-API docs (stub handlers): http://localhost:8000/docs
+API docs: http://localhost:8000/docs
+
+### Database migrations & seed
+
+```bash
+cd backend
+alembic upgrade head
+python scripts/seed.py
+```
+
+Run both from the `backend/` directory. If Alembic reports **multiple heads**, check `alembic/versions/` for two base migrations (both with `down_revision = None`) and remove the duplicate, keeping `652dc7509b3d_initial_schema.py` as the base.
+
+Demo login: `alex@globetrotter.app` / `globetrotter`
 
 ### 4. Frontend
 

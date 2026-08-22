@@ -2,9 +2,15 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class SignupRequest(BaseModel):
-    name: str = Field(min_length=1, max_length=255)
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=100)
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
+    phone: str | None = Field(default=None, max_length=50)
+    city: str | None = Field(default=None, max_length=100)
+    country: str | None = Field(default=None, max_length=100)
+    bio: str | None = None
+    photo: str | None = Field(default=None, max_length=512)
 
 
 class LoginRequest(BaseModel):

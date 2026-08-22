@@ -1,24 +1,25 @@
-"""Security utilities (stubs for Phase 1 implementation)."""
+"""Security utilities."""
 
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+import bcrypt
 from jose import jwt
-from passlib.context import CryptContext
 
 from app.core.config import get_settings
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
     """Hash a plain-text password."""
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain-text password against a hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"),
+        hashed_password.encode("utf-8"),
+    )
 
 
 def create_access_token(subject: str, expires_delta: timedelta | None = None) -> str:
@@ -29,3 +30,13 @@ def create_access_token(subject: str, expires_delta: timedelta | None = None) ->
     )
     payload: dict[str, Any] = {"sub": subject, "exp": expire}
     return jwt.encode(payload, settings.secret_key, algorithm="HS256")
+
+
+def decode_access_token(token: str) -> str:
+    """Decode JWT and return subject (user id)."""
+    settings = get_settings()
+    payload = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
+    subject = payload.get("sub")
+    if not subject:
+        raise ValueError("Invalid token payload")
+    return str(subject)

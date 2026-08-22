@@ -1,24 +1,17 @@
-import React from 'react';
+import * as React from 'react';
+import { cn } from '@/lib/utils';
 
-export function Input({ id, label, error, ...props }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-      {label && (
-        <label htmlFor={id} style={{ fontWeight: 500 }}>
-          {label}
-        </label>
-      )}
-      <input
-        id={id}
-        style={{
-          padding: '0.625rem 0.75rem',
-          borderRadius: 'var(--radius-md)',
-          border: `1px solid ${error ? 'var(--color-error)' : 'var(--color-border)'}`,
-          background: 'var(--color-surface)',
-        }}
-        {...props}
-      />
-      {error && <span className="error-text">{error}</span>}
-    </div>
-  );
-}
+const Input = React.forwardRef(({ className, type, ...props }, ref) => (
+  <input
+    type={type}
+    className={cn(
+      'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+      className,
+    )}
+    ref={ref}
+    {...props}
+  />
+));
+Input.displayName = 'Input';
+
+export { Input };
