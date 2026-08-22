@@ -58,16 +58,73 @@ export const formatDate = (d) =>
     day: 'numeric',
   });
 
+export function normalizeStop(stop) {
+  return {
+    id: stop.id,
+    tripId: stop.trip_id,
+    cityId: stop.city_id,
+    cityName: stop.city_name,
+    startDate: stop.start_date,
+    endDate: stop.end_date,
+    orderIndex: stop.order_index,
+    activities: stop.activities || [],
+  };
+}
+
+export function normalizeTripActivity(ta) {
+  const time = ta.scheduled_time || '10:00:00';
+  return {
+    id: ta.id,
+    stopId: ta.stop_id,
+    activityId: ta.activity_id,
+    scheduledDate: ta.scheduled_date,
+    scheduledTime: time.length >= 5 ? time.slice(0, 5) : time,
+    activityName: ta.activity_name || '',
+    category: ta.category || '',
+    duration: ta.duration || 0,
+    estimatedCost: Number(ta.effective_cost ?? ta.cost ?? 0),
+  };
+}
+
+export function activityHours(minutes) {
+  const hours = Number(minutes || 0) / 60;
+  return Number.isInteger(hours) ? hours : Math.round(hours * 10) / 10;
+}
+
+export function stopActivityCost(stop) {
+  return (stop.activities || []).reduce((sum, a) => sum + (a.estimatedCost || 0), 0);
+}
+
+export function buildDays(trip) {
+  const map = new Map();
+  const stops = [...(trip.stops || [])].sort((a, b) => a.orderIndex - b.orderIndex);
+  for (const stop of stops) {
+    const cityName = stop.cityName || 'Unknown city';
+    const sorted = [...(stop.activities || [])].sort((a, b) => {
+      const dateCmp = a.scheduledDate.localeCompare(b.scheduledDate);
+      if (dateCmp !== 0) return dateCmp;
+      return a.scheduledTime.localeCompare(b.scheduledTime);
+    });
+    for (const ta of sorted) {
+      const entry = map.get(ta.scheduledDate) ?? { date: ta.scheduledDate, cityName, items: [] };
+      entry.items.push({
+        id: ta.id,
+        name: ta.activityName || 'Activity',
+        category: ta.category || 'Sightseeing',
+        duration: activityHours(ta.duration),
+        startTime: ta.scheduledTime,
+        cost: ta.estimatedCost,
+      });
+      map.set(ta.scheduledDate, entry);
+    }
+  }
+  return [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
 export function normalizeTrip(trip) {
-  const stops = (trip.stops || []).map((s) => ({
-    id: s.id,
-    cityId: s.city_id,
-    cityName: s.city_name,
-    startDate: s.start_date,
-    endDate: s.end_date,
-    orderIndex: s.order_index,
-    activities: [],
-  }));
+  const stops = (trip.stops || []).map((s) =>
+    s.start_date !== undefined || s.city_id !== undefined ? normalizeStop(s) : s,
+  );
 
   return {
     id: String(trip.id),

@@ -10,13 +10,6 @@ from app.services.stops import StopService
 router = APIRouter(prefix="/stops", tags=["stops"])
 
 
-def _not_implemented() -> None:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Endpoint not implemented yet.",
-    )
-
-
 @router.get("", response_model=PaginatedResponse[StopRead])
 def list_stops(
     trip_id: int = Query(...),
@@ -38,15 +31,28 @@ def create_stop(
 
 
 @router.get("/{stop_id}", response_model=StopRead)
-def get_stop(stop_id: int) -> StopRead:
-    _not_implemented()
+def get_stop(
+    stop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> StopRead:
+    return StopService.get_stop(db, current_user, stop_id)
 
 
 @router.patch("/{stop_id}", response_model=StopRead)
-def update_stop(stop_id: int, _payload: StopUpdate) -> StopRead:
-    _not_implemented()
+def update_stop(
+    stop_id: int,
+    payload: StopUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> StopRead:
+    return StopService.update_stop(db, current_user, stop_id, payload)
 
 
 @router.delete("/{stop_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_stop(stop_id: int) -> None:
-    _not_implemented()
+def delete_stop(
+    stop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> None:
+    StopService.delete_stop(db, current_user, stop_id)

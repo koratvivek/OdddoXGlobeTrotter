@@ -4,10 +4,10 @@ import { SignupPage } from '@/features/auth/pages/SignupPage';
 import { BudgetPlaceholderPage } from '@/features/budget/BudgetPlaceholderPage';
 import { CatalogPage } from '@/features/catalog/CatalogPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
-import { ItineraryPlaceholderPage } from '@/features/itinerary/ItineraryPlaceholderPage';
 import { ProfilePlaceholderPage } from '@/features/profile/ProfilePlaceholderPage';
 import { CreateTripPage } from '@/features/trips/CreateTripPage';
 import { EditTripPage } from '@/features/trips/EditTripPage';
+import { TripItineraryPage } from '@/features/trips/TripItineraryPage';
 import { TripOverviewPage } from '@/features/trips/TripOverviewPage';
 import { TripsListPage } from '@/features/trips/TripsListPage';
 import { VisualizationPlaceholderPage } from '@/features/visualization/VisualizationPlaceholderPage';
@@ -30,6 +30,12 @@ export const router = createBrowserRouter([
   { path: '/trips/new', element: <CreateTripPage /> },
   { path: '/trips/:id', element: <TripOverviewPage /> },
   { path: '/trips/:id/edit', element: <EditTripPage /> },
+  { path: '/trips/:id/itinerary', element: <TripItineraryPage /> },
+  { path: '/trips/:id/budget', element: (
+      <PlaceholderWithShell title="Budget" subtitle="Trip cost breakdown">
+        <BudgetPlaceholderPage />
+      </PlaceholderWithShell>
+    ) },
   {
     path: '/explore',
     element: (
@@ -80,11 +86,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/itinerary',
-    element: (
-      <PlaceholderWithShell title="Itinerary Builder" subtitle="Build your trip itinerary">
-        <ItineraryPlaceholderPage />
-      </PlaceholderWithShell>
-    ),
+    element: <Navigate to="/trips" replace />,
   },
   {
     path: '/budget',

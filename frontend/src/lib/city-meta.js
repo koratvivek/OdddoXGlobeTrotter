@@ -50,5 +50,6 @@ export function normalizeCity(city) {
 }
 
 export function cityById(cities, id) {
-  return cities.find((c) => c.id === id);
+  const n = Number(id);
+  return cities.find((c) => c.id === id || c.id === n);
 }

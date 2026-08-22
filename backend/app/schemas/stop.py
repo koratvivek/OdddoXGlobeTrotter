@@ -11,8 +11,12 @@ class StopBase(BaseModel):
     order_index: int
 
 
-class StopCreate(StopBase):
-    pass
+class StopCreate(BaseModel):
+    trip_id: int
+    city_id: int
+    start_date: date
+    end_date: date
+    order_index: int | None = None
 
 
 class StopUpdate(BaseModel):
