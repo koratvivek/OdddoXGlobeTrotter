@@ -2,7 +2,7 @@ import { Navigate, createBrowserRouter } from 'react-router-dom';
 import { LoginScreen } from '@/components/gt/login-form';
 import { SignupPage } from '@/features/auth/pages/SignupPage';
 import { BudgetPlaceholderPage } from '@/features/budget/BudgetPlaceholderPage';
-import { CatalogPlaceholderPage } from '@/features/catalog/CatalogPlaceholderPage';
+import { CatalogPage } from '@/features/catalog/CatalogPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { ItineraryPlaceholderPage } from '@/features/itinerary/ItineraryPlaceholderPage';
 import { ProfilePlaceholderPage } from '@/features/profile/ProfilePlaceholderPage';
@@ -34,7 +34,7 @@ export const router = createBrowserRouter([
     path: '/explore',
     element: (
       <PlaceholderWithShell title="Explore" subtitle="Discover destinations">
-        <CatalogPlaceholderPage />
+        <CatalogPage />
       </PlaceholderWithShell>
     ),
   },

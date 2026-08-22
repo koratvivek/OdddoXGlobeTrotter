@@ -206,7 +206,7 @@ export function CreateTripPage() {
           {step === 2 && (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Pick the cities you want to visit. We'll split your dates evenly — you can fine-tune every
+                Pick the cities you want to visit. We&apos;ll split your dates evenly — you can fine-tune every
                 stop next.
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
