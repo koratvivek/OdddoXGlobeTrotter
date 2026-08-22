@@ -1,7 +1,7 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 import { LoginScreen } from '@/components/gt/login-form';
 import { SignupPage } from '@/features/auth/pages/SignupPage';
-import { BudgetPlaceholderPage } from '@/features/budget/BudgetPlaceholderPage';
+import { TripBudgetPage } from '@/features/budget/TripBudgetPage';
 import { CatalogPage } from '@/features/catalog/CatalogPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { ItineraryPlaceholderPage } from '@/features/itinerary/ItineraryPlaceholderPage';
@@ -87,10 +87,10 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/budget',
+    path: '/trips/:id/budget',
     element: (
-      <PlaceholderWithShell title="Budget" subtitle="Trip cost breakdown">
-        <BudgetPlaceholderPage />
+      <PlaceholderWithShell title="Trip Budget" subtitle="Trip cost breakdown">
+        <TripBudgetPage />
       </PlaceholderWithShell>
     ),
   },

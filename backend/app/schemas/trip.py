@@ -45,3 +45,21 @@ class TripRead(TripBase):
     created_at: datetime
     stop_count: int = 0
     stops: list[TripStopSummary] = []
+
+
+class TripBudgetCategoryDetails(BaseModel):
+    transport: int | float
+    accommodation: int | float
+    activities: int | float
+    meals: int | float
+    other: int | float
+
+
+class TripBudgetResponse(BaseModel):
+    trip_id: int
+    budget_cap: Decimal | None
+    categories: TripBudgetCategoryDetails
+    total_cost: int | float
+    remaining_budget: int | float | None
+    is_over_budget: bool
+    average_cost_per_day: int | float

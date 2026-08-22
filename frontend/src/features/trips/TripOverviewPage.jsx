@@ -78,9 +78,14 @@ export function TripOverviewPage() {
               {trip.stops.length} {trip.stops.length === 1 ? 'city' : 'cities'}
             </p>
           </Card>
-          <Card className="rounded-2xl border-border p-4 shadow-card">
-            <p className="text-xs text-muted-foreground">Planned budget</p>
-            <p className="mt-1 font-semibold">{currency(trip.plannedBudget)}</p>
+          <Card className="flex flex-col justify-between rounded-2xl border-border p-4 shadow-card">
+            <div>
+              <p className="text-xs text-muted-foreground">Planned budget</p>
+              <p className="mt-1 font-semibold">{currency(trip.plannedBudget)}</p>
+            </div>
+            <Button asChild variant="link" className="mt-2 h-auto p-0 text-left text-xs font-semibold text-primary">
+              <Link to={`/trips/${trip.id}/budget`}>View cost breakdown →</Link>
+            </Button>
           </Card>
         </div>
 

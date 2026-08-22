@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user, get_db
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.schemas.trip import TripCreate, TripRead, TripUpdate
+from app.schemas.trip import TripBudgetResponse, TripCreate, TripRead, TripUpdate
+from app.services.budget import BudgetService
 from app.services.trips import TripService
-
 router = APIRouter(prefix="/trips", tags=["trips"])
 
 
@@ -58,3 +58,12 @@ def delete_trip(
     current_user: User = Depends(get_current_user),
 ) -> None:
     TripService.delete_trip(db, trip_id, current_user)
+
+
+@router.get("/{trip_id}/budget", response_model=TripBudgetResponse)
+def get_trip_budget(
+    trip_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> TripBudgetResponse:
+    return BudgetService.calculate_trip_cost(db, trip_id, current_user)

@@ -19,6 +19,7 @@ export function CreateTripPage() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [budgetCap, setBudgetCap] = useState('');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
   const [cover, setCover] = useState(DEFAULT_COVER);
@@ -63,7 +64,7 @@ export function CreateTripPage() {
         end_date: end,
         cover_photo: coverPhoto,
         is_public: false,
-        budget_cap: 2500,
+        budget_cap: budgetCap ? Number(budgetCap) : null,
       });
 
       const daysPerStop = Math.max(
@@ -136,6 +137,18 @@ export function CreateTripPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="What's the plan? Museums, food, mountain days…"
                   className="rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="budget">Planned Budget ($) (Optional)</Label>
+                <Input
+                  id="budget"
+                  type="number"
+                  min="0"
+                  value={budgetCap}
+                  onChange={(e) => setBudgetCap(e.target.value)}
+                  placeholder="e.g. 2500"
+                  className="h-11 rounded-xl"
                 />
               </div>
               <div className="space-y-2">

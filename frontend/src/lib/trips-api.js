@@ -28,6 +28,10 @@ export async function fetchTrip(id) {
   return normalizeTrip(data);
 }
 
+export async function fetchTripBudget(id) {
+  return apiClient(`/trips/${id}/budget`);
+}
+
 export async function createTrip(payload) {
   const data = await apiClient('/trips', {
     method: 'POST',
