@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models.user import User
 from app.schemas.auth import LoginRequest, SignupRequest
-from app.schemas.user import UserRead, UserUpdate
+from app.schemas.user import UserRead, UserUpdate, _USER_UPDATABLE_FIELDS
 
 
 class AuthService:
@@ -71,6 +71,8 @@ class AuthService:
     @staticmethod
     def update_user(db: Session, user: User, payload: UserUpdate) -> User:
         data = payload.model_dump(exclude_unset=True)
+        # Defense-in-depth: only allow explicitly whitelisted fields
+        data = {k: v for k, v in data.items() if k in _USER_UPDATABLE_FIELDS}
         if "first_name" in data or "last_name" in data:
             first = data.get("first_name", user.first_name)
             last = data.get("last_name", user.last_name)

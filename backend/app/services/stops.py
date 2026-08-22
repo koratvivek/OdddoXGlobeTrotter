@@ -83,7 +83,7 @@ class StopService:
 
     @staticmethod
     def create_stop(db: Session, user: User, payload: StopCreate) -> StopRead:
-        StopService._get_owned_trip(db, payload.trip_id, user)
+        trip = StopService._get_owned_trip(db, payload.trip_id, user)
         city = db.get(City, payload.city_id)
         if not city:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="City not found.")
@@ -91,6 +91,11 @@ class StopService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Stop end date must be on or after start date.",
+            )
+        if payload.start_date < trip.start_date or payload.end_date > trip.end_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Stop dates must fall within the trip date range.",
             )
 
         order_index = payload.order_index
@@ -128,6 +133,7 @@ class StopService:
     @staticmethod
     def update_stop(db: Session, user: User, stop_id: int, payload: StopUpdate) -> StopRead:
         stop = StopService._get_owned_stop(db, stop_id, user)
+        trip = db.get(Trip, stop.trip_id)
 
         if payload.city_id is not None:
             city = db.get(City, payload.city_id)
@@ -150,6 +156,11 @@ class StopService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Stop end date must be on or after start date.",
+            )
+        if stop.start_date < trip.start_date or stop.end_date > trip.end_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Stop dates must fall within the trip date range.",
             )
 
         db.commit()

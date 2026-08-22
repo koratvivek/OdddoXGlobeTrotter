@@ -95,7 +95,7 @@ export function SignupPage() {
   };
 
   const field = (id, label, type = 'text', placeholder = '') => (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
       <Input
         id={id}
@@ -103,7 +103,7 @@ export function SignupPage() {
         value={form[id]}
         onChange={set(id)}
         placeholder={placeholder}
-        className="h-11 rounded-xl"
+        className="h-9 rounded-lg"
       />
       {errors[id] && <p className="text-xs text-destructive">{errors[id]}</p>}
     </div>
@@ -111,9 +111,9 @@ export function SignupPage() {
 
   return (
     <AuthLayout wide title="Create your account" subtitle="A few details and your first itinerary is minutes away.">
-      <form onSubmit={submit} className="space-y-6" noValidate>
+      <form onSubmit={submit} className="space-y-4" noValidate>
         <div className="flex items-center gap-4">
-          <label className="relative grid h-20 w-20 cursor-pointer place-items-center overflow-hidden rounded-full border border-dashed border-border bg-secondary text-muted-foreground">
+          <label className="relative grid h-14 w-14 cursor-pointer place-items-center overflow-hidden rounded-full border border-dashed border-border bg-secondary text-muted-foreground">
             {photo ? (
               <img src={photo} alt="Profile preview" className="h-full w-full object-cover" />
             ) : (
@@ -142,7 +142,7 @@ export function SignupPage() {
           {field('firstName', 'First name', 'text', 'Alex')}
           {field('lastName', 'Last name', 'text', 'Rivera')}
           {field('email', 'Email address', 'email', 'you@example.com')}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="phone">Phone number</Label>
             <Input
               id="phone"
@@ -152,7 +152,7 @@ export function SignupPage() {
               onChange={handlePhoneChange}
               placeholder="10-digit mobile number"
               maxLength={10}
-              className="h-11 rounded-xl"
+              className="h-9 rounded-lg"
             />
             {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
           </div>
@@ -160,8 +160,8 @@ export function SignupPage() {
           {field('country', 'Country', 'text', 'USA')}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
             <Label htmlFor="pw">Password</Label>
             <div className="relative">
               <Input
@@ -169,7 +169,7 @@ export function SignupPage() {
                 type={show ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-11 rounded-xl pr-11"
+                className="h-9 rounded-lg pr-9"
               />
               <button
                 type="button"
@@ -182,46 +182,34 @@ export function SignupPage() {
             </div>
             {password && (
               <div className="space-y-1">
-                <Progress value={strength} className="h-1.5" />
-                <p className="text-xs text-muted-foreground">Password strength: {strengthLabel}</p>
+                <Progress value={strength} className="h-1" />
+                <p className="text-[10px] text-muted-foreground">Strength: {strengthLabel}</p>
               </div>
             )}
             {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="cpw">Confirm password</Label>
             <Input
               id="cpw"
               type={show ? 'text' : 'password'}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              className="h-11 rounded-xl"
+              className="h-9 rounded-lg"
             />
             {errors.confirm && <p className="text-xs text-destructive">{errors.confirm}</p>}
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="bio">About you</Label>
-          <Textarea
-            id="bio"
-            value={form.bio}
-            onChange={set('bio')}
-            rows={3}
-            placeholder="Tell fellow travellers what kind of trips you love planning…"
-            className="rounded-xl"
-          />
-        </div>
-
         <div className="space-y-1">
-          <label className="flex items-start gap-3 text-sm text-muted-foreground">
+          <label className="flex items-start gap-2 text-sm text-muted-foreground">
             <Checkbox checked={agree} onCheckedChange={(v) => setAgree(Boolean(v))} className="mt-0.5" />
             <span>I agree to the GlobeTrotter Terms of Service and Privacy Policy.</span>
           </label>
           {errors.agree && <p className="text-xs text-destructive">{errors.agree}</p>}
         </div>
 
-        <Button type="submit" disabled={loading} className="h-11 w-full rounded-full text-base">
+        <Button type="submit" disabled={loading} className="h-10 w-full rounded-full text-base">
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {loading ? 'Creating account…' : 'Create account'}
         </Button>

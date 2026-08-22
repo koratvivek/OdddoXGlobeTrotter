@@ -6,7 +6,7 @@ from datetime import date, timedelta
 
 from fastapi import HTTPException, status
 from sqlalchemy import case, func
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, subqueryload
 
 from app.models.city import City
 from app.models.share_like import ShareLike
@@ -211,12 +211,12 @@ class ShareService:
             .join(User, Trip.user_id == User.id)
             .outerjoin(like_counts, like_counts.c.share_id == TripShare.id)
             .options(
-                joinedload(TripShare.trip)
-                .joinedload(Trip.stops)
+                subqueryload(TripShare.trip)
+                .subqueryload(Trip.stops)
                 .joinedload(Stop.city),
-                joinedload(TripShare.trip)
-                .joinedload(Trip.stops)
-                .joinedload(Stop.trip_activities)
+                subqueryload(TripShare.trip)
+                .subqueryload(Trip.stops)
+                .subqueryload(Stop.trip_activities)
                 .joinedload(TripActivity.activity),
                 joinedload(TripShare.trip).joinedload(Trip.user),
             )

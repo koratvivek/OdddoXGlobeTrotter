@@ -4,7 +4,7 @@ from datetime import date
 
 from fastapi import HTTPException, status
 from sqlalchemy import case
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, subqueryload
 
 from app.models.stop import Stop
 from app.models.trip import Trip
@@ -86,7 +86,7 @@ class TripService:
         today = date.today()
         query = (
             db.query(Trip)
-            .options(joinedload(Trip.stops).joinedload(Stop.city))
+            .options(subqueryload(Trip.stops).joinedload(Stop.city))
             .filter(Trip.user_id == user.id)
         )
 
