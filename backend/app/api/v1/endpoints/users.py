@@ -1,22 +1,24 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
+from app.core.deps import get_current_user, get_db
+from app.models.user import User
 from app.schemas.user import UserRead, UserUpdate
+from app.services.auth import AuthService
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-def _not_implemented() -> None:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Endpoint not implemented yet.",
-    )
-
-
 @router.get("/me", response_model=UserRead)
-def get_profile() -> UserRead:
-    _not_implemented()
+def get_profile(current_user: User = Depends(get_current_user)) -> UserRead:
+    return AuthService.to_user_read(current_user)
 
 
 @router.patch("/me", response_model=UserRead)
-def update_profile(_payload: UserUpdate) -> UserRead:
-    _not_implemented()
+def update_profile(
+    payload: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserRead:
+    user = AuthService.update_user(db, current_user, payload)
+    return AuthService.to_user_read(user)

@@ -2,9 +2,10 @@
 
 Based on the GlobeTrotter hackathon spec (`GlobeTrotter.pdf`). A personalized,
 collaborative multi-city travel planning app: create itineraries, add stops/cities/
+
 activities, auto-estimate budgets, visualize timelines, and share plans.
 
-**Assumed stack** (swap freely): React (frontend) + Node/Express (API) + PostgreSQL
+**Assumed stack** (swap freely): React (frontend) + FastAPI (API) + PostgreSQL
 (relational data: users, trips, stops, activities, costs) + JWT auth.
 
 ## How independence works here

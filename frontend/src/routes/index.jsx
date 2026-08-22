@@ -1,48 +1,93 @@
 import { Navigate, createBrowserRouter } from 'react-router-dom';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { AuthLayout } from '@/components/layout/AuthLayout';
-import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { LoginScreen } from '@/components/gt/login-form';
 import { SignupPage } from '@/features/auth/pages/SignupPage';
 import { BudgetPlaceholderPage } from '@/features/budget/BudgetPlaceholderPage';
 import { CatalogPlaceholderPage } from '@/features/catalog/CatalogPlaceholderPage';
+import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { ItineraryPlaceholderPage } from '@/features/itinerary/ItineraryPlaceholderPage';
 import { ProfilePlaceholderPage } from '@/features/profile/ProfilePlaceholderPage';
 import { TripsPlaceholderPage } from '@/features/trips/TripsPlaceholderPage';
 import { VisualizationPlaceholderPage } from '@/features/visualization/VisualizationPlaceholderPage';
+import { AppShell } from '@/components/gt/app-shell';
 
-function HomePage() {
+function PlaceholderWithShell({ title, subtitle, children }) {
   return (
-    <div className="card">
-      <h1>Plan your next adventure</h1>
-      <p style={{ color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
-        GlobeTrotter helps you build collaborative multi-city itineraries with budgets and
-        timelines.
-      </p>
-    </div>
+    <AppShell title={title} subtitle={subtitle}>
+      {children}
+    </AppShell>
   );
 }
 
 export const router = createBrowserRouter([
+  { path: '/', element: <Navigate to="/dashboard" replace /> },
+  { path: '/login', element: <LoginScreen /> },
+  { path: '/signup', element: <SignupPage /> },
+  { path: '/dashboard', element: <DashboardPage /> },
   {
-    path: '/',
-    element: <AppLayout />,
-    children: [
-      { index: true, element: <HomePage /> },
-      { path: 'trips', element: <TripsPlaceholderPage /> },
-      { path: 'catalog', element: <CatalogPlaceholderPage /> },
-      { path: 'itinerary', element: <ItineraryPlaceholderPage /> },
-      { path: 'budget', element: <BudgetPlaceholderPage /> },
-      { path: 'visualization', element: <VisualizationPlaceholderPage /> },
-      { path: 'profile', element: <ProfilePlaceholderPage /> },
-    ],
+    path: '/trips',
+    element: (
+      <PlaceholderWithShell title="My Trips" subtitle="Your travel plans">
+        <TripsPlaceholderPage />
+      </PlaceholderWithShell>
+    ),
   },
   {
-    path: '/',
-    element: <AuthLayout />,
-    children: [
-      { path: 'login', element: <LoginPage /> },
-      { path: 'signup', element: <SignupPage /> },
-    ],
+    path: '/trips/new',
+    element: (
+      <PlaceholderWithShell title="Plan a Trip" subtitle="Create a new itinerary">
+        <TripsPlaceholderPage />
+      </PlaceholderWithShell>
+    ),
   },
-  { path: '*', element: <Navigate to="/" replace /> },
+  {
+    path: '/explore',
+    element: (
+      <PlaceholderWithShell title="Explore" subtitle="Discover destinations">
+        <CatalogPlaceholderPage />
+      </PlaceholderWithShell>
+    ),
+  },
+  {
+    path: '/calendar',
+    element: (
+      <PlaceholderWithShell title="Calendar" subtitle="Your trip timeline">
+        <VisualizationPlaceholderPage />
+      </PlaceholderWithShell>
+    ),
+  },
+  {
+    path: '/community',
+    element: (
+      <PlaceholderWithShell title="Community" subtitle="Shared itineraries">
+        <VisualizationPlaceholderPage />
+      </PlaceholderWithShell>
+    ),
+  },
+  {
+    path: '/profile',
+    element: (
+      <PlaceholderWithShell title="Profile" subtitle="Your account">
+        <ProfilePlaceholderPage />
+      </PlaceholderWithShell>
+    ),
+  },
+  {
+    path: '/settings',
+    element: (
+      <PlaceholderWithShell title="Settings" subtitle="Preferences">
+        <ProfilePlaceholderPage />
+      </PlaceholderWithShell>
+    ),
+  },
+  {
+    path: '/admin',
+    element: (
+      <PlaceholderWithShell title="Admin Dashboard" subtitle="Platform analytics">
+        <ProfilePlaceholderPage />
+      </PlaceholderWithShell>
+    ),
+  },
+  { path: '/itinerary', element: <ItineraryPlaceholderPage /> },
+  { path: '/budget', element: <BudgetPlaceholderPage /> },
+  { path: '*', element: <Navigate to="/dashboard" replace /> },
 ]);

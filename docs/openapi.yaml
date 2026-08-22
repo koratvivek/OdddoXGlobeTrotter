@@ -679,12 +679,16 @@ components:
 
     SignupRequest:
       type: object
-      required: [name, email, password]
+      required: [first_name, last_name, email, password]
       properties:
-        name:
+        first_name:
           type: string
           minLength: 1
-          maxLength: 255
+          maxLength: 100
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 100
         email:
           type: string
           format: email
@@ -692,6 +696,21 @@ components:
           type: string
           minLength: 8
           maxLength: 128
+        phone:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        photo:
+          type: string
+          nullable: true
 
     LoginRequest:
       type: object
@@ -723,15 +742,31 @@ components:
 
     UserRead:
       type: object
-      required: [id, name, email, language_pref, is_admin, created_at]
+      required: [id, first_name, last_name, name, email, language_pref, is_admin, created_at]
       properties:
         id:
           type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
         name:
           type: string
         email:
           type: string
           format: email
+        phone:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
         photo:
           type: string
           nullable: true
@@ -746,11 +781,25 @@ components:
     UserUpdate:
       type: object
       properties:
-        name:
+        first_name:
+          type: string
+        last_name:
           type: string
         email:
           type: string
           format: email
+        phone:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
         photo:
           type: string
           nullable: true

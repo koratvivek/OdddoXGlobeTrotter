@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     app_name: str = "GlobeTrotter API"
     debug: bool = False
-    database_url: str = "postgresql+psycopg://globetrotter:globetrotter@localhost:5432/globetrotter"
+    database_url: str
     secret_key: str = "change-me"
     access_token_expire_minutes: int = 60
     cors_origins: str = "http://localhost:5173"
