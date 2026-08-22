@@ -11,6 +11,16 @@ export async function updateProfile(payload) {
   });
 }
 
+export async function changePassword(currentPassword, newPassword) {
+  return apiClient('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+}
+
 export async function deleteAccount() {
   return apiClient('/users/me', {
     method: 'DELETE',

@@ -291,11 +291,11 @@ export async function fetchAllTripActivities(stopId) {
 
 
 
-export async function fetchActivitiesPage({ page = 1, pageSize = 100, cityId, q, category } = {}) {
+export async function fetchActivitiesPage({ page = 1, pageSize = 100, cityId, q, category, country } = {}) {
 
   const data = await apiClient(
 
-    `/activities${buildQuery({ page, page_size: pageSize, city_id: cityId, q, category })}`,
+    `/activities${buildQuery({ page, page_size: pageSize, city_id: cityId, q, category, country })}`,
 
   );
 

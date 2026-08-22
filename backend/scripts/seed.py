@@ -88,7 +88,30 @@ ACTIVITIES = [
 ]
 
 
+ADMIN_EMAIL = "admin@globetrotter.app"
+ADMIN_PASSWORD = "Gt#Admin9!kR7mP2xQ"
+
+
 def seed(db: Session) -> None:
+    admin = db.query(User).filter(User.email == ADMIN_EMAIL).first()
+    if not admin:
+        admin = User(
+            first_name="GlobeTrotter",
+            last_name="Admin",
+            name="GlobeTrotter Admin",
+            email=ADMIN_EMAIL,
+            password_hash=hash_password(ADMIN_PASSWORD),
+            city="San Francisco",
+            country="USA",
+            bio="Platform administrator.",
+            is_admin=True,
+        )
+        db.add(admin)
+        db.flush()
+    else:
+        admin.is_admin = True
+        admin.password_hash = hash_password(ADMIN_PASSWORD)
+
     user = db.query(User).filter(User.email == "alex@globetrotter.app").first()
     if not user:
         user = User(
@@ -193,6 +216,8 @@ def seed(db: Session) -> None:
 
     db.commit()
     print("Seed complete.")
+    print(f"Admin login: {ADMIN_EMAIL}")
+    print(f"Admin password: {ADMIN_PASSWORD}")
 
 
 if __name__ == "__main__":

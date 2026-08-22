@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarDays, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, List, MapPin } from 'lucide-react';
 import { AppShell } from '@/components/gt/app-shell';
 import { EmptyState, StatusBadge } from '@/components/gt/cards';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { currency, formatDate, formatRange, tripStatus } from '@/lib/trip-utils';
 import { fetchAllTrips, fetchTripWithItinerary } from '@/lib/trips-api';
 import { cn } from '@/lib/utils';
@@ -53,6 +54,30 @@ function eventsByDay(trips) {
   return map;
 }
 
+function EventRow({ event }) {
+  return (
+    <li className="rounded-xl bg-secondary/60 p-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">{event.label}</p>
+          <Link
+            to={`/trips/${event.tripId}`}
+            className="truncate text-xs text-primary hover:underline"
+          >
+            {event.tripName}
+          </Link>
+        </div>
+        <Badge variant="secondary" className="shrink-0 capitalize">
+          {event.kind}
+        </Badge>
+      </div>
+      {typeof event.cost === 'number' && event.cost > 0 && (
+        <p className="mt-1 text-xs text-muted-foreground">{currency(event.cost)}</p>
+      )}
+    </li>
+  );
+}
+
 export function CalendarPage() {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +87,7 @@ export function CalendarPage() {
     return { year: d.getFullYear(), month: d.getMonth() };
   });
   const [selected, setSelected] = useState(today);
+  const [view, setView] = useState('month');
 
   useEffect(() => {
     let cancelled = false;
@@ -104,6 +130,22 @@ export function CalendarPage() {
     .sort((a, b) => a.startDate.localeCompare(b.startDate));
   const selectedEvents = events.get(selected) ?? [];
 
+  const monthDates = useMemo(
+    () => grid.filter(Boolean),
+    [grid],
+  );
+
+  const listDays = useMemo(() => {
+    const isCurrentMonth = cursor.year === new Date().getFullYear() && cursor.month === new Date().getMonth();
+    return monthDates
+      .filter((date) => {
+        if (!(events.get(date) || []).length) return false;
+        if (isCurrentMonth && date < today) return false;
+        return true;
+      })
+      .map((date) => ({ date, items: events.get(date) || [] }));
+  }, [monthDates, events, cursor, today]);
+
   const shift = (delta) =>
     setCursor((c) => {
       const d = new Date(c.year, c.month + delta, 1);
@@ -132,6 +174,63 @@ export function CalendarPage() {
           }
         />
       ) : (
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Tabs value={view} onValueChange={setView}>
+              <TabsList>
+                <TabsTrigger value="month">
+                  <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
+                  Month
+                </TabsTrigger>
+                <TabsTrigger value="list">
+                  <List className="mr-1.5 h-3.5 w-3.5" />
+                  List
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <div className="flex items-center gap-1">
+              <Button size="icon" variant="ghost" onClick={() => shift(-1)} aria-label="Previous month">
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-full"
+                onClick={() => {
+                  const d = new Date();
+                  setCursor({ year: d.getFullYear(), month: d.getMonth() });
+                  setSelected(today);
+                }}
+              >
+                Today
+              </Button>
+              <Button size="icon" variant="ghost" onClick={() => shift(1)} aria-label="Next month">
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {view === 'list' ? (
+            <div className="space-y-4">
+              <h2 className="text-lg font-bold">{monthLabel}</h2>
+              {listDays.length === 0 ? (
+                <Card className="rounded-2xl border-border p-8 text-center text-sm text-muted-foreground shadow-card">
+                  Nothing planned this month.
+                </Card>
+              ) : (
+                listDays.map(({ date, items }) => (
+                  <Card key={date} className="space-y-3 rounded-2xl border-border p-5 shadow-card">
+                    <h3 className="text-base font-bold">{formatDate(date)}</h3>
+                    <ul className="space-y-2">
+                      {items.map((e, i) => (
+                        <EventRow key={`${e.tripId}-${e.kind}-${i}`} event={e} />
+                      ))}
+                    </ul>
+                  </Card>
+                ))
+              )}
+            </div>
+          ) : (
         <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <Card className="min-w-0 space-y-4 rounded-2xl border-border p-4 shadow-card sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -216,25 +315,7 @@ export function CalendarPage() {
               ) : (
                 <ul className="space-y-2">
                   {selectedEvents.map((e, i) => (
-                    <li key={`${e.tripId}-${i}`} className="rounded-xl bg-secondary/60 p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">{e.label}</p>
-                          <Link
-                            to={`/trips/${e.tripId}`}
-                            className="truncate text-xs text-primary hover:underline"
-                          >
-                            {e.tripName}
-                          </Link>
-                        </div>
-                        <Badge variant="secondary" className="shrink-0 capitalize">
-                          {e.kind}
-                        </Badge>
-                      </div>
-                      {typeof e.cost === 'number' && e.cost > 0 && (
-                        <p className="mt-1 text-xs text-muted-foreground">{currency(e.cost)}</p>
-                      )}
-                    </li>
+                    <EventRow key={`${e.tripId}-${e.kind}-${i}`} event={e} />
                   ))}
                 </ul>
               )}
@@ -276,6 +357,8 @@ export function CalendarPage() {
               )}
             </Card>
           </div>
+        </div>
+          )}
         </div>
       )}
     </AppShell>

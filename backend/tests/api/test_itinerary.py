@@ -227,3 +227,32 @@ def test_stops_other_user_forbidden(client, db):
     headers_b = {"Authorization": f"Bearer {login.json()['access_token']}"}
     response = client.get(f"/api/v1/stops/{stop['id']}", headers=headers_b)
     assert response.status_code == 404
+
+
+def test_list_activities_filter_by_country(client, db):
+    headers = _auth_headers(client, "acts-country@example.com")
+    paris, _activity = _seed_city_and_activity(db)
+    rome = City(name="Rome", country="Italy", cost_index=3.0, popularity_score=90)
+    db.add(rome)
+    db.flush()
+    db.add(
+        Activity(
+            city_id=rome.id,
+            name="Colosseum Tour",
+            category="Culture",
+            cost=58,
+            duration=180,
+        )
+    )
+    db.commit()
+
+    france = client.get("/api/v1/activities?country=France", headers=headers)
+    assert france.status_code == 200
+    names = [item["name"] for item in france.json()["items"]]
+    assert "Louvre Museum Tour" in names
+    assert "Colosseum Tour" not in names
+
+    italy = client.get("/api/v1/activities?country=Italy", headers=headers)
+    names = [item["name"] for item in italy.json()["items"]]
+    assert "Colosseum Tour" in names
+    assert "Louvre Museum Tour" not in names
