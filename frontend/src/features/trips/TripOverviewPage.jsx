@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowDown,
@@ -9,6 +9,7 @@ import {
   MapPin,
   Pencil,
   Plus,
+  Search,
   Share2,
   Trash2,
   Wallet,
@@ -51,6 +52,10 @@ import {
   updateStop,
   updateTripActivity,
 } from '@/lib/trips-api';
+
+// Category filter constants
+const ALL_CATEGORIES = ['All', 'Sightseeing', 'Food', 'Adventure', 'Culture', 'Relax', 'Nightlife'];
+const PAGE_SIZE = 20;
 
 function AddStopDialog({ trip, cities, onAdded }) {
   const [open, setOpen] = useState(false);
@@ -139,17 +144,40 @@ function AddStopDialog({ trip, cities, onAdded }) {
 
 function AddActivityDialog({ stop, cityName, onAdded }) {
   const [open, setOpen] = useState(false);
-  const [options, setOptions] = useState([]);
+  const [allOptions, setAllOptions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const scrollRef = React.useRef(null);
 
   useEffect(() => {
     if (!open) return;
     setLoading(true);
+    setSearch('');
+    setActiveCategory('All');
+    setVisibleCount(PAGE_SIZE);
     fetchAllActivitiesForCity(stop.cityId)
-      .then(setOptions)
+      .then(setAllOptions)
       .catch(() => toast.error('Failed to load activities'))
       .finally(() => setLoading(false));
   }, [open, stop.cityId]);
+
+  // Infinite scroll handler
+  const handleScroll = (e) => {
+    const el = e.currentTarget;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 60) {
+      setVisibleCount((c) => Math.min(c + PAGE_SIZE, filtered.length));
+    }
+  };
+
+  const filtered = allOptions.filter((a) => {
+    const matchesSearch = a.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCat = activeCategory === 'All' || a.category === activeCategory;
+    return matchesSearch && matchesCat;
+  });
+
+  const visible = filtered.slice(0, visibleCount);
 
   const add = async (activity) => {
     let dateToUse = stop.startDate;
@@ -194,44 +222,98 @@ function AddActivityDialog({ stop, cityName, onAdded }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="rounded-full">
+        <Button size="sm" variant="outline" className="rounded-full cursor-pointer">
           <Plus className="mr-1 h-4 w-4" />
           Add activity
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Activities in {cityName}</DialogTitle>
-          <DialogDescription>
-            Add experiences to this stop — costs roll into your budget.
-          </DialogDescription>
-        </DialogHeader>
-        {loading ? (
-          <p className="text-sm text-muted-foreground">Loading activities…</p>
-        ) : options.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No activities available for this city.</p>
-        ) : (
-          <div className="space-y-2">
-            {options.map((a) => (
+      <DialogContent className="flex max-h-[85vh] flex-col overflow-hidden p-0">
+        {/* Sticky header */}
+        <div className="sticky top-0 z-10 border-b border-border bg-background px-6 pt-5 pb-3">
+          <DialogHeader>
+            <DialogTitle>Activities in {cityName}</DialogTitle>
+            <DialogDescription>
+              Add experiences to this stop — costs roll into your budget.
+            </DialogDescription>
+          </DialogHeader>
+          {/* Search bar */}
+          <div className="relative mt-3">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="activity-search"
+              placeholder="Search activities…"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setVisibleCount(PAGE_SIZE); }}
+              className="h-9 rounded-xl pl-9 text-sm"
+            />
+          </div>
+          {/* Category filter pills */}
+          <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            {ALL_CATEGORIES.map((cat) => (
               <button
-                key={a.id}
+                key={cat}
                 type="button"
-                onClick={() => add(a)}
-                className="flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left transition-colors hover:bg-secondary"
+                onClick={() => { setActiveCategory(cat); setVisibleCount(PAGE_SIZE); }}
+                className={`cursor-pointer shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  activeCategory === cat
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/70'
+                }`}
               >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{a.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {a.category} · {a.durationHours}h
-                  </p>
-                </div>
-                <span className="shrink-0 text-sm font-semibold">
-                  {a.cost === 0 ? 'Free' : currency(a.cost)}
-                </span>
+                {cat}
               </button>
             ))}
           </div>
-        )}
+        </div>
+
+        {/* Scrollable activity list */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto px-6 py-3"
+          onScroll={handleScroll}
+        >
+          {loading ? (
+            <div className="space-y-2 animate-pulse">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-3 rounded-xl border border-border p-3">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="h-4 w-2/3 rounded bg-secondary/60" />
+                    <div className="h-3 w-1/3 rounded bg-secondary/40" />
+                  </div>
+                  <div className="h-4 w-10 shrink-0 rounded bg-secondary/50" />
+                </div>
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              {search || activeCategory !== 'All' ? 'No activities match your filters.' : 'No activities available for this city.'}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {visible.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => add(a)}
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border p-3 text-left transition-colors hover:bg-secondary"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{a.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {a.category} · {a.durationHours}h
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold">
+                    {a.cost === 0 ? 'Free' : currency(a.cost)}
+                  </span>
+                </button>
+              ))}
+              {visibleCount < filtered.length && (
+                <p className="py-2 text-center text-xs text-muted-foreground">Scroll to load more…</p>
+              )}
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -307,6 +389,7 @@ function StopCard({ stop, index, total, cities, onChanged }) {
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const moveActivity = async (ta, dir, i) => {
     const j = i + dir;
     if (j < 0 || j >= sortedActivities.length) return;

@@ -4,14 +4,27 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { DestinationCard, EmptyState } from '@/components/gt/cards';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { deleteAccount, fetchSavedDestinations, unsaveDestination, updateProfile } from '@/lib/users-api';
 import { uploadImage } from '@/lib/uploads-api';
+import { fetchAllCities } from '@/lib/trips-api';
 
 export function ProfilePage() {
   const { user, refreshUser, logout } = useAuth();
@@ -20,13 +33,13 @@ export function ProfilePage() {
   const [savedDestinations, setSavedDestinations] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [cities, setCities] = useState([]);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     city: '',
     country: '',
     bio: '',
-    photo: '',
   });
 
   useEffect(() => {
@@ -37,10 +50,14 @@ export function ProfilePage() {
         city: user.city || '',
         country: user.country || '',
         bio: user.bio || '',
-        photo: user.photo || '',
       });
     }
   }, [user]);
+
+  // Load cities for the dropdown
+  useEffect(() => {
+    fetchAllCities().then(setCities).catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetchSavedDestinations()
@@ -86,17 +103,24 @@ export function ProfilePage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      return;
-    }
     try {
       await deleteAccount();
       logout();
-      navigate('/login');
       toast.success('Account deleted successfully');
+      navigate('/login');
     } catch (err) {
       toast.error(err.message || 'Failed to delete account');
     }
+  };
+
+  // When a city is selected from the dropdown, auto-fill country
+  const handleCitySelect = (cityName) => {
+    const matched = cities.find((c) => c.name === cityName);
+    setFormData((prev) => ({
+      ...prev,
+      city: cityName,
+      country: matched?.country || prev.country,
+    }));
   };
 
   if (!user) return null;
@@ -178,46 +202,30 @@ export function ProfilePage() {
                   onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                 />
               </div>
+              {/* City dropdown — auto-fills country */}
               <div className="space-y-2">
                 <Label>City</Label>
-                <Input
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                />
+                <Select value={formData.city} onValueChange={handleCitySelect}>
+                  <SelectTrigger className="h-10 rounded-xl">
+                    <SelectValue placeholder="Select a city…" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {cities.map((c) => (
+                      <SelectItem key={c.id} value={c.name}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+              {/* Country — read-only, auto-filled from city selection */}
               <div className="space-y-2">
                 <Label>Country</Label>
                 <Input
                   value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label>Profile photo</Label>
-                <div className="flex items-center gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="rounded-full"
-                    disabled={uploadingPhoto}
-                    onClick={() => document.getElementById('profile-photo-input')?.click()}
-                  >
-                    <Camera className="mr-2 h-4 w-4" />
-                    {uploadingPhoto ? 'Uploading…' : 'Upload photo'}
-                  </Button>
-                  <p className="text-xs text-muted-foreground">PNG or JPG, up to 5MB.</p>
-                </div>
-                <input
-                  id="profile-photo-input"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  disabled={uploadingPhoto}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    void handlePhotoUpload(file);
-                    e.target.value = '';
-                  }}
+                  readOnly
+                  className="cursor-not-allowed bg-secondary/50 text-muted-foreground"
+                  placeholder="Auto-filled from city"
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
@@ -279,12 +287,35 @@ export function ProfilePage() {
               Permanently delete your account and all associated data.
             </p>
           </div>
-          <Button variant="destructive" onClick={handleDeleteAccount}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete Account
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Account
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action is permanent and cannot be undone. All your trips, itineraries,
+                  saved destinations, and account data will be removed immediately.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={handleDeleteAccount}
+                >
+                  Yes, delete my account
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
     </div>
   );
 }
+

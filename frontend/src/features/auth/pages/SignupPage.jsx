@@ -44,6 +44,11 @@ export function SignupPage() {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const handlePhoneChange = (e) => {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setForm((f) => ({ ...f, phone: digits }));
+  };
+
   const strength = strengthOf(password);
   const strengthLabel = strength < 40 ? 'Weak' : strength < 80 ? 'Good' : 'Strong';
 
@@ -53,7 +58,11 @@ export function SignupPage() {
     if (!form.firstName.trim()) next.firstName = 'First name is required';
     if (!form.lastName.trim()) next.lastName = 'Last name is required';
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) next.email = 'Enter a valid email';
+    if (form.phone && form.phone.length !== 10) next.phone = 'Phone number must be exactly 10 digits';
     if (password.length < 8) next.password = 'Use at least 8 characters';
+    if (!/[A-Z]/.test(password)) next.password = 'Password must contain at least one uppercase letter';
+    if (!/[0-9]/.test(password)) next.password = 'Password must contain at least one number';
+    if (!/[^A-Za-z0-9]/.test(password)) next.password = 'Password must contain at least one special character';
     if (password !== confirm) next.confirm = 'Passwords do not match';
     if (!agree) next.agree = 'Please accept the terms to continue';
     setErrors(next);
@@ -133,7 +142,20 @@ export function SignupPage() {
           {field('firstName', 'First name', 'text', 'Alex')}
           {field('lastName', 'Last name', 'text', 'Rivera')}
           {field('email', 'Email address', 'email', 'you@example.com')}
-          {field('phone', 'Phone number', 'tel', '+1 415 555 0132')}
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone number</Label>
+            <Input
+              id="phone"
+              type="tel"
+              inputMode="numeric"
+              value={form.phone}
+              onChange={handlePhoneChange}
+              placeholder="10-digit mobile number"
+              maxLength={10}
+              className="h-11 rounded-xl"
+            />
+            {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+          </div>
           {field('city', 'City', 'text', 'San Francisco')}
           {field('country', 'Country', 'text', 'USA')}
         </div>

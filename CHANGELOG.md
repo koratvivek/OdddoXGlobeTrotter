@@ -372,6 +372,20 @@ Complete user profile management, persistent saved content, and a comprehensive 
 - Created `ActivityCardSkeleton` inside [`frontend/src/components/gt/cards.jsx`](frontend/src/components/gt/cards.jsx) mimicking the layout of activity items.
 - Integrated `DestinationCardSkeleton`, `ActivityCardSkeleton`, and custom inspiration loaders inside the Explore tab [`frontend/src/features/catalog/CatalogPage.jsx`](frontend/src/features/catalog/CatalogPage.jsx) to display proper skeleton screens for popular destinations, recommendations, popular activities, and travel inspiration while loading.
 - Resolved merge conflict in `CatalogPage.jsx` using `useSavedDestinations` Hook bookmarks sync and route `navigate` redirects.
+- Removed hardcoded default email (`alex@globetrotter.app`) and password (`globetrotter`) from [`frontend/src/components/gt/login-form.jsx`](frontend/src/components/gt/login-form.jsx); login form now starts with empty fields.
+- Strengthened password validation on login to require: minimum 8 characters, at least one uppercase letter, at least one number, and at least one special character; added helper hint text below the password input.
+- Added phone number validation on [`frontend/src/features/auth/pages/SignupPage.jsx`](frontend/src/features/auth/pages/SignupPage.jsx): `handlePhoneChange` strips non-digit characters on each keystroke and caps the field to exactly 10 digits (`maxLength={10}`); submission additionally validates that if a phone is provided it must be exactly 10 digits long; applied same strong password rules (uppercase, number, special character) to the signup form.
+- Refactored `AddActivityDialog` inside [`frontend/src/features/trips/TripOverviewPage.jsx`](frontend/src/features/trips/TripOverviewPage.jsx):
+  - Sticky header block (title, description, search bar, category filter pills) pinned to `top-0 z-10` so it remains visible while scrolling.
+  - Added text search input (`<Search>` icon prefix) filtering activities by name in real time.
+  - Added horizontal category filter pill row for: All, Sightseeing, Food, Adventure, Culture, Relax, Nightlife.
+  - Implemented frontend infinite scroll pagination: starts at 20 visible items; appends 20 more per `onScroll` event when the user reaches within 60px of the list bottom.
+  - Added pulse skeleton rows (4 items) while `loading` is true.
+  - Applied `cursor-pointer` style to all activity rows and filter buttons.
+  - Defined `cityById` helper and `ALL_CATEGORIES` / `PAGE_SIZE` constants at module scope; fixed ESLint `no-undef` errors on `cityById`.
+- Replaced `window.confirm` delete-account prompt in [`frontend/src/features/profile/ProfilePage.jsx`](frontend/src/features/profile/ProfilePage.jsx) with a proper Radix UI `AlertDialog` modal — "Delete your account?" title, description of consequences, Cancel and "Yes, delete my account" (destructive) action buttons; on confirm, calls `deleteAccount()`, `logout()`, shows success toast, and redirects to `/login`.
+- Removed the "Photo URL" input field and its associated `formData.photo` state from `ProfilePage.jsx` edit form; profile photo is now display-only on the profile header.
+- Replaced free-text City/Country `<Input>` fields in the profile edit form with a city `<Select>` dropdown populated from `fetchAllCities()` API; selecting a city auto-fills the read-only Country field using the city's own `country` property from the backend.
 
 ---
 

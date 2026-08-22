@@ -13,9 +13,9 @@ import { apiClient } from '@/lib/apiClient';
 export function LoginScreen() {
   const { login, user, ready } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('alex@globetrotter.app');
-  const [password, setPassword] = useState('globetrotter');
-  const [remember, setRemember] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(false);
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -24,6 +24,14 @@ export function LoginScreen() {
     if (ready && user) navigate('/dashboard', { replace: true });
   }, [ready, user, navigate]);
 
+  const validatePassword = (pw) => {
+    if (pw.length < 8) return 'Password must be at least 8 characters.';
+    if (!/[A-Z]/.test(pw)) return 'Password must contain at least one uppercase letter.';
+    if (!/[0-9]/.test(pw)) return 'Password must contain at least one number.';
+    if (!/[^A-Za-z0-9]/.test(pw)) return 'Password must contain at least one special character.';
+    return null;
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -31,8 +39,9 @@ export function LoginScreen() {
       setError('Enter a valid email address.');
       return;
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    const pwError = validatePassword(password);
+    if (pwError) {
+      setError(pwError);
       return;
     }
     setLoading(true);
@@ -41,7 +50,7 @@ export function LoginScreen() {
       toast.success('Welcome back to GlobeTrotter');
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Login failed.');
+      setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -70,6 +79,7 @@ export function LoginScreen() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
+            autoComplete="email"
             className="h-11 rounded-xl"
           />
         </div>
@@ -81,6 +91,8 @@ export function LoginScreen() {
               type={show ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              autoComplete="current-password"
               className="h-11 rounded-xl pr-11"
             />
             <button
@@ -92,12 +104,15 @@ export function LoginScreen() {
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Must be 8+ chars with an uppercase letter, number &amp; special character.
+          </p>
         </div>
         {error && (
           <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
         )}
         <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
             <Checkbox checked={remember} onCheckedChange={(v) => setRemember(Boolean(v))} />
             Remember me
           </label>
@@ -123,3 +138,4 @@ export function LoginScreen() {
     </AuthLayout>
   );
 }
+
