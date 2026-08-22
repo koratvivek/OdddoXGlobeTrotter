@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Edit2, MapPin, Trash2 } from 'lucide-react';
+import { Camera, Edit2, MapPin, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { DestinationCard, EmptyState } from '@/components/gt/cards';
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { deleteAccount, fetchSavedDestinations, unsaveDestination, updateProfile } from '@/lib/users-api';
+import { uploadImage } from '@/lib/uploads-api';
 
 export function ProfilePage() {
   const { user, refreshUser, logout } = useAuth();
@@ -18,6 +19,7 @@ export function ProfilePage() {
 
   const [savedDestinations, setSavedDestinations] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -67,6 +69,22 @@ export function ProfilePage() {
     }
   };
 
+  const handlePhotoUpload = async (file) => {
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const { url } = await uploadImage(file);
+      setFormData((prev) => ({ ...prev, photo: url }));
+      await updateProfile({ photo: url });
+      await refreshUser();
+      toast.success('Profile photo updated');
+    } catch (err) {
+      toast.error(err.message || 'Failed to upload profile photo');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
     if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
       return;
@@ -91,13 +109,29 @@ export function ProfilePage() {
         <CardContent className="relative px-6 pb-6 pt-0 sm:px-8">
           <div className="-mt-16 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-              <Avatar className="h-32 w-32 rounded-2xl border-4 border-card shadow-sm">
-                <AvatarImage src={user.photo} alt={user.name} className="object-cover" />
-                <AvatarFallback className="rounded-2xl text-4xl">
-                  {user.first_name?.[0]}
-                  {user.last_name?.[0]}
-                </AvatarFallback>
-              </Avatar>
+              <label className="relative block cursor-pointer">
+                <Avatar className="h-32 w-32 rounded-2xl border-4 border-card shadow-sm">
+                  <AvatarImage src={formData.photo || user.photo} alt={user.name} className="object-cover" />
+                  <AvatarFallback className="rounded-2xl text-4xl">
+                    {user.first_name?.[0]}
+                    {user.last_name?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                  {uploadingPhoto ? <span className="text-xs">…</span> : <Camera className="h-4 w-4" />}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="absolute inset-0 cursor-pointer opacity-0"
+                  disabled={uploadingPhoto}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    void handlePhotoUpload(file);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
               <div className="mb-2 space-y-1">
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">{user.name}</h1>
                 <div className="flex items-center gap-2 text-muted-foreground">
@@ -159,11 +193,31 @@ export function ProfilePage() {
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label>Photo URL</Label>
-                <Input
-                  value={formData.photo}
-                  onChange={(e) => setFormData({ ...formData, photo: e.target.value })}
-                  placeholder="https://example.com/photo.jpg"
+                <Label>Profile photo</Label>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-full"
+                    disabled={uploadingPhoto}
+                    onClick={() => document.getElementById('profile-photo-input')?.click()}
+                  >
+                    <Camera className="mr-2 h-4 w-4" />
+                    {uploadingPhoto ? 'Uploading…' : 'Upload photo'}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">PNG or JPG, up to 5MB.</p>
+                </div>
+                <input
+                  id="profile-photo-input"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploadingPhoto}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    void handlePhotoUpload(file);
+                    e.target.value = '';
+                  }}
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">

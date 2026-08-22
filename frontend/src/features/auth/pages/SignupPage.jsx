@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
+import { updateProfile } from '@/lib/users-api';
+import { uploadImage } from '@/lib/uploads-api';
 
 const strengthOf = (p) => {
   let s = 0;
@@ -20,7 +22,7 @@ const strengthOf = (p) => {
 };
 
 export function SignupPage() {
-  const { signup } = useAuth();
+  const { signup, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     firstName: '',
@@ -36,6 +38,7 @@ export function SignupPage() {
   const [show, setShow] = useState(false);
   const [agree, setAgree] = useState(false);
   const [photo, setPhoto] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -67,9 +70,12 @@ export function SignupPage() {
         city: form.city || null,
         country: form.country || null,
         bio: form.bio || null,
-        // Photo upload requires a dedicated file-upload endpoint (not yet built).
-        // For now, the profile photo is preview-only on the signup form.
       });
+      if (photoFile) {
+        const { url } = await uploadImage(photoFile);
+        await updateProfile({ photo: url });
+        await refreshUser();
+      }
       toast.success('Account created — welcome aboard!');
       navigate('/dashboard');
     } catch (err) {
@@ -110,7 +116,10 @@ export function SignupPage() {
               className="absolute inset-0 cursor-pointer opacity-0"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) setPhoto(URL.createObjectURL(file));
+                if (file) {
+                  setPhotoFile(file);
+                  setPhoto(URL.createObjectURL(file));
+                }
               }}
             />
           </label>

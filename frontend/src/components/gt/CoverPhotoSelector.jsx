@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Check, ImagePlus, Search } from 'lucide-react';
+import { Check, ImagePlus, Loader2, Search } from 'lucide-react';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { uploadImage } from '@/lib/uploads-api';
 import { cn } from '@/lib/utils';
 
 export function CoverPhotoSelector({
@@ -13,6 +15,7 @@ export function CoverPhotoSelector({
   const [searchQuery, setSearchQuery] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [presets, setPresets] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   // Pick 3 stable random presets on mount, ensuring currently selected preset (if any) is included
   useEffect(() => {
@@ -71,16 +74,30 @@ export function CoverPhotoSelector({
 
         {/* Custom Upload Button */}
         <label className="flex h-24 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-border text-muted-foreground transition-all hover:bg-secondary/40 bg-background/50">
-          <ImagePlus className="h-4 w-4 mb-1 text-muted-foreground" />
-          <span className="text-[10px] font-medium">Upload custom</span>
+          {uploading ? (
+            <Loader2 className="h-4 w-4 mb-1 animate-spin text-muted-foreground" />
+          ) : (
+            <ImagePlus className="h-4 w-4 mb-1 text-muted-foreground" />
+          )}
+          <span className="text-[10px] font-medium">{uploading ? 'Uploading…' : 'Upload custom'}</span>
           <input
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={(e) => {
+            disabled={uploading}
+            onChange={async (e) => {
               const f = e.target.files?.[0];
-              if (f) {
-                onSelectCover(URL.createObjectURL(f), 'custom');
+              if (!f) return;
+              setUploading(true);
+              try {
+                const { url } = await uploadImage(f);
+                onSelectCover(url, 'custom');
+                toast.success('Cover photo uploaded');
+              } catch (err) {
+                toast.error(err.message || 'Failed to upload cover photo');
+              } finally {
+                setUploading(false);
+                e.target.value = '';
               }
             }}
           />

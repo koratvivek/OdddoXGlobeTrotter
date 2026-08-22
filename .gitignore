@@ -86,3 +86,7 @@ pnpm-debug.log*
 # Operating System files
 .DS_Store
 Thumbs.db
+
+# User uploads
+backend/uploads/
+uploads/

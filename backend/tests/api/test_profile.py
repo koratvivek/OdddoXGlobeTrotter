@@ -79,3 +79,30 @@ def test_delete_account(client):
     # Token should no longer work
     res = client.get("/api/v1/users/me", headers=headers)
     assert res.status_code == 401
+
+
+def test_delete_account_with_trips_and_shares(client):
+    headers = _auth_headers(client, "del-trips@example.com")
+    trip = client.post(
+        "/api/v1/trips",
+        headers=headers,
+        json={
+            "name": "Trip to delete",
+            "start_date": "2026-09-01",
+            "end_date": "2026-09-14",
+            "budget_cap": 1000,
+        },
+    )
+    assert trip.status_code == 201
+    share = client.post(
+        "/api/v1/shares",
+        headers=headers,
+        json={"trip_id": trip.json()["id"]},
+    )
+    assert share.status_code == 201
+
+    res = client.delete("/api/v1/users/me", headers=headers)
+    assert res.status_code == 204, res.text
+
+    res = client.get("/api/v1/users/me", headers=headers)
+    assert res.status_code == 401
