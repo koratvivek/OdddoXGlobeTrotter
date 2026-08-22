@@ -27,11 +27,11 @@ export function CatalogPage() {
     async function fetchData() {
       try {
         const [citiesData, activitiesData] = await Promise.all([
-          apiClient('/cities'),
+          apiClient('/cities?page_size=100'),
           apiClient('/activities')
         ]);
-        setCities(citiesData);
-        setActivities(activitiesData);
+        setCities(citiesData.items || citiesData);
+        setActivities(activitiesData.items || activitiesData);
       } catch (err) {
         toast.error("Failed to load catalog data");
         console.error(err);

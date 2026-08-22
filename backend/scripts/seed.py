@@ -18,10 +18,48 @@ from app.models.trip import Trip
 from app.models.user import User
 
 CITIES = [
-    {"name": "Paris", "country": "France", "cost_index": 4.0, "popularity_score": 96},
-    {"name": "Tokyo", "country": "Japan", "cost_index": 4.0, "popularity_score": 94},
-    {"name": "Rome", "country": "Italy", "cost_index": 3.0, "popularity_score": 91},
-    {"name": "Bali", "country": "Indonesia", "cost_index": 2.0, "popularity_score": 89},
+    {
+        "name": "Paris",
+        "country": "France",
+        "cost_index": 4.0,
+        "popularity_score": 96,
+        "image_url": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80",
+    },
+    {
+        "name": "Tokyo",
+        "country": "Japan",
+        "cost_index": 4.0,
+        "popularity_score": 94,
+        "image_url": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80",
+    },
+    {
+        "name": "Rome",
+        "country": "Italy",
+        "cost_index": 3.0,
+        "popularity_score": 91,
+        "image_url": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&q=80",
+    },
+    {
+        "name": "Bali",
+        "country": "Indonesia",
+        "cost_index": 2.0,
+        "popularity_score": 89,
+        "image_url": "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80",
+    },
+    {
+        "name": "New York City",
+        "country": "USA",
+        "cost_index": 5.0,
+        "popularity_score": 93,
+        "image_url": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&q=80",
+    },
+    {
+        "name": "Barcelona",
+        "country": "Spain",
+        "cost_index": 3.0,
+        "popularity_score": 90,
+        "image_url": "https://images.unsplash.com/photo-1583422409516-2895a77aecf9?w=800&q=80",
+    },
 ]
 
 ACTIVITIES = [
@@ -59,6 +97,9 @@ def seed(db: Session) -> None:
             city = City(**data)
             db.add(city)
             db.flush()
+        else:
+            for key, value in data.items():
+                setattr(city, key, value)
         city_map[city.name] = city
 
     for city_name, name, category, cost, duration in ACTIVITIES:
@@ -83,6 +124,7 @@ def seed(db: Session) -> None:
     if not trip:
         start = date.today() + timedelta(days=30)
         end = start + timedelta(days=14)
+        paris = city_map.get("Paris")
         db.add(
             Trip(
                 user_id=user.id,
@@ -90,6 +132,7 @@ def seed(db: Session) -> None:
                 start_date=start,
                 end_date=end,
                 description="Paris and Rome highlights.",
+                cover_photo=paris.image_url if paris else None,
                 is_public=False,
                 budget_cap=3500,
             )

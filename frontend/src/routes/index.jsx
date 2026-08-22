@@ -6,7 +6,10 @@ import { CatalogPage } from '@/features/catalog/CatalogPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { ItineraryPlaceholderPage } from '@/features/itinerary/ItineraryPlaceholderPage';
 import { ProfilePlaceholderPage } from '@/features/profile/ProfilePlaceholderPage';
-import { TripsPlaceholderPage } from '@/features/trips/TripsPlaceholderPage';
+import { CreateTripPage } from '@/features/trips/CreateTripPage';
+import { EditTripPage } from '@/features/trips/EditTripPage';
+import { TripOverviewPage } from '@/features/trips/TripOverviewPage';
+import { TripsListPage } from '@/features/trips/TripsListPage';
 import { VisualizationPlaceholderPage } from '@/features/visualization/VisualizationPlaceholderPage';
 import { AppShell } from '@/components/gt/app-shell';
 
@@ -23,22 +26,10 @@ export const router = createBrowserRouter([
   { path: '/login', element: <LoginScreen /> },
   { path: '/signup', element: <SignupPage /> },
   { path: '/dashboard', element: <DashboardPage /> },
-  {
-    path: '/trips',
-    element: (
-      <PlaceholderWithShell title="My Trips" subtitle="Your travel plans">
-        <TripsPlaceholderPage />
-      </PlaceholderWithShell>
-    ),
-  },
-  {
-    path: '/trips/new',
-    element: (
-      <PlaceholderWithShell title="Plan a Trip" subtitle="Create a new itinerary">
-        <TripsPlaceholderPage />
-      </PlaceholderWithShell>
-    ),
-  },
+  { path: '/trips', element: <TripsListPage /> },
+  { path: '/trips/new', element: <CreateTripPage /> },
+  { path: '/trips/:id', element: <TripOverviewPage /> },
+  { path: '/trips/:id/edit', element: <EditTripPage /> },
   {
     path: '/explore',
     element: (
