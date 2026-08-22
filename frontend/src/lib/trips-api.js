@@ -48,6 +48,21 @@ export async function fetchTrips({ page = 1, pageSize = 20, q, status = 'all', s
 
 
 
+export async function fetchAllTrips() {
+  const trips = [];
+  let page = 1;
+  let totalPages = 1;
+  while (page <= totalPages) {
+    const data = await fetchTrips({ page, pageSize: 100 });
+    trips.push(...data.items);
+    totalPages = data.total_pages || 1;
+    page += 1;
+  }
+  return trips;
+}
+
+
+
 export async function fetchTrip(id) {
 
   const data = await apiClient(`/trips/${id}`);

@@ -10,7 +10,10 @@ import { EditTripPage } from '@/features/trips/EditTripPage';
 import { TripItineraryPage } from '@/features/trips/TripItineraryPage';
 import { TripOverviewPage } from '@/features/trips/TripOverviewPage';
 import { TripsListPage } from '@/features/trips/TripsListPage';
-import { VisualizationPlaceholderPage } from '@/features/visualization/VisualizationPlaceholderPage';
+import { CalendarPage } from '@/features/visualization/CalendarPage';
+import { CommunityDetailPage } from '@/features/visualization/CommunityDetailPage';
+import { CommunityPage } from '@/features/visualization/CommunityPage';
+import { SharePage } from '@/features/visualization/SharePage';
 import { AppShell } from '@/components/gt/app-shell';
 
 function PlaceholderWithShell({ title, subtitle, children }) {
@@ -31,28 +34,24 @@ export const router = createBrowserRouter([
   { path: '/trips/:id', element: <TripOverviewPage /> },
   { path: '/trips/:id/edit', element: <EditTripPage /> },
   { path: '/trips/:id/itinerary', element: <TripItineraryPage /> },
-
+  { path: '/share/:slug', element: <SharePage /> },
+  {
+    path: '/calendar',
+    element: <CalendarPage />,
+  },
+  {
+    path: '/community',
+    element: <CommunityPage />,
+  },
+  {
+    path: '/community/:slug',
+    element: <CommunityDetailPage />,
+  },
   {
     path: '/explore',
     element: (
       <PlaceholderWithShell title="Explore" subtitle="Discover destinations">
         <CatalogPage />
-      </PlaceholderWithShell>
-    ),
-  },
-  {
-    path: '/calendar',
-    element: (
-      <PlaceholderWithShell title="Calendar" subtitle="Your trip timeline">
-        <VisualizationPlaceholderPage />
-      </PlaceholderWithShell>
-    ),
-  },
-  {
-    path: '/community',
-    element: (
-      <PlaceholderWithShell title="Community" subtitle="Shared itineraries">
-        <VisualizationPlaceholderPage />
       </PlaceholderWithShell>
     ),
   },

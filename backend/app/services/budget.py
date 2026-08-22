@@ -10,20 +10,7 @@ from app.schemas.trip import TripBudgetCategoryDetails, TripBudgetResponse
 
 class BudgetService:
     @staticmethod
-    def calculate_trip_cost(db: Session, trip_id: int, user: User) -> TripBudgetResponse:
-        trip = (
-            db.query(Trip)
-            .options(
-                joinedload(Trip.stops).joinedload(Stop.city),
-                joinedload(Trip.stops).joinedload(Stop.trip_activities).joinedload(TripActivity.activity)
-            )
-            .filter(Trip.id == trip_id, Trip.user_id == user.id)
-            .first()
-        )
-        
-        if not trip:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found.")
-
+    def _calculate_from_trip(trip: Trip) -> TripBudgetResponse:
         # Activities
         activities_total = Decimal("0.00")
         for stop in trip.stops:
@@ -84,3 +71,37 @@ class BudgetService:
             is_over_budget=is_over_budget,
             average_cost_per_day=average_cost_per_day,
         )
+
+    @staticmethod
+    def calculate_trip_cost(db: Session, trip_id: int, user: User) -> TripBudgetResponse:
+        trip = (
+            db.query(Trip)
+            .options(
+                joinedload(Trip.stops).joinedload(Stop.city),
+                joinedload(Trip.stops).joinedload(Stop.trip_activities).joinedload(TripActivity.activity)
+            )
+            .filter(Trip.id == trip_id, Trip.user_id == user.id)
+            .first()
+        )
+
+        if not trip:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found.")
+
+        return BudgetService._calculate_from_trip(trip)
+
+    @staticmethod
+    def calculate_trip_cost_public(db: Session, trip_id: int) -> TripBudgetResponse:
+        trip = (
+            db.query(Trip)
+            .options(
+                joinedload(Trip.stops).joinedload(Stop.city),
+                joinedload(Trip.stops).joinedload(Stop.trip_activities).joinedload(TripActivity.activity)
+            )
+            .filter(Trip.id == trip_id, Trip.is_public.is_(True))
+            .first()
+        )
+
+        if not trip:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found.")
+
+        return BudgetService._calculate_from_trip(trip)

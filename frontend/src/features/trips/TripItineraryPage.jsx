@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cityById } from '@/lib/city-meta';
+import { shareTripLink } from '@/lib/shares-api';
 import {
   buildDays,
   currency,
@@ -56,8 +57,13 @@ export function TripItineraryPage() {
   const stops = [...trip.stops].sort((a, b) => a.orderIndex - b.orderIndex);
   const days = buildDays(trip);
 
-  const share = () => {
-    toast.info('Sharing comes in a later phase');
+  const share = async () => {
+    try {
+      await shareTripLink(id);
+      toast.success('Public link copied to clipboard');
+    } catch (err) {
+      toast.error(err.message || 'Failed to create share link');
+    }
   };
 
   return (

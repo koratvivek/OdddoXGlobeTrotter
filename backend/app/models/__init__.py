@@ -3,6 +3,7 @@ from app.models.city import City
 from app.models.stop import Stop
 from app.models.trip import Trip
 from app.models.trip_activity import TripActivity
+from app.models.share_like import ShareLike
 from app.models.trip_share import TripShare
 from app.models.user import User
 
@@ -14,4 +15,5 @@ __all__ = [
   "Stop",
   "TripActivity",
   "TripShare",
+  "ShareLike",
 ]
