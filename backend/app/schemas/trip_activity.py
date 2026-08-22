@@ -12,8 +12,12 @@ class TripActivityBase(BaseModel):
     cost_override: Decimal | None = None
 
 
-class TripActivityCreate(TripActivityBase):
-    pass
+class TripActivityCreate(BaseModel):
+    stop_id: int
+    activity_id: int
+    scheduled_date: date | None = None
+    scheduled_time: time | None = None
+    cost_override: Decimal | None = None
 
 
 class TripActivityUpdate(BaseModel):
@@ -27,3 +31,8 @@ class TripActivityRead(TripActivityBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    activity_name: str | None = None
+    category: str | None = None
+    duration: int | None = None
+    cost: Decimal | None = None
+    effective_cost: Decimal | None = None

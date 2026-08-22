@@ -63,12 +63,26 @@ CITIES = [
 ]
 
 ACTIVITIES = [
-    ("Paris", "Eiffel Tower Summit Visit", "Sightseeing", 32, 150),
-    ("Paris", "Louvre Museum Tour", "Culture", 45, 180),
-    ("Tokyo", "Tsukiji Food Tour", "Food", 65, 180),
-    ("Tokyo", "TeamLab Digital Art", "Culture", 28, 120),
-    ("Rome", "Colosseum & Forum Tour", "Culture", 58, 180),
-    ("Bali", "Ubud Rice Terrace Walk", "Sightseeing", 20, 180),
+    ("Paris", "Eiffel Tower Summit Visit", "Sightseeing", 32, 150, "Skip-the-line lift to the summit for panoramic city views."),
+    ("Paris", "Louvre Museum Tour", "Culture", 45, 180, "Guided highlights tour through the world's largest art museum."),
+    ("Paris", "Seine Sunset Cruise", "Relax", 22, 60, "One-hour river cruise past Notre-Dame and the Musée d'Orsay."),
+    ("Paris", "Montmartre Walking Tour", "Sightseeing", 18, 120, "Artist squares, Sacré-Cœur and hidden vineyard lanes."),
+    ("Tokyo", "Tsukiji Food Tour", "Food", 65, 180, "Ten tastings across the outer market with a local guide."),
+    ("Tokyo", "TeamLab Digital Art", "Culture", 28, 120, "Immersive light installations in Toyosu."),
+    ("Tokyo", "Mount Takao Day Hike", "Adventure", 15, 360, "Forest trail with Fuji views an hour from Shinjuku."),
+    ("Tokyo", "Golden Gai Bar Crawl", "Nightlife", 50, 180, "Tiny bars and izakaya in Shinjuku's alleyways."),
+    ("Rome", "Colosseum & Forum Tour", "Culture", 58, 180, "Arena floor access with an archaeologist guide."),
+    ("Rome", "Trastevere Pasta Class", "Food", 75, 210, "Hands-on cooking class making fresh pasta and tiramisu."),
+    ("Rome", "Vatican Museums Early Access", "Culture", 68, 180, "Sistine Chapel before the crowds arrive."),
+    ("Bali", "Ubud Rice Terrace Walk", "Sightseeing", 20, 180, "Morning walk through Tegallalang with a local farmer."),
+    ("Bali", "Balinese Cooking Class", "Food", 35, 240, "Market visit plus a six-dish traditional lunch."),
+    ("Bali", "Uluwatu Beach Day", "Relax", 25, 300, "Cliff-side beaches, surf lesson optional."),
+    ("New York City", "Brooklyn Bridge Sunrise Walk", "Sightseeing", 0, 90, "Cross into Dumbo before the city wakes up."),
+    ("New York City", "MoMA Visit", "Culture", 30, 150, "Modern masterpieces in Midtown."),
+    ("New York City", "Harlem Jazz Night", "Nightlife", 55, 180, "Live sets at a historic Harlem club."),
+    ("Barcelona", "Sagrada Família Tour", "Culture", 40, 120, "Gaudí's basilica with tower access."),
+    ("Barcelona", "Tapas & Vermouth Crawl", "Food", 60, 180, "Five stops through El Born and Gothic Quarter."),
+    ("Barcelona", "Montjuïc Sunset Cable Car", "Relax", 16, 120, "Harbour views from the hillside gardens."),
 ]
 
 
@@ -102,14 +116,14 @@ def seed(db: Session) -> None:
                 setattr(city, key, value)
         city_map[city.name] = city
 
-    for city_name, name, category, cost, duration in ACTIVITIES:
+    for city_name, name, category, cost, duration, description in ACTIVITIES:
         city = city_map[city_name]
-        exists = (
+        existing = (
             db.query(Activity)
             .filter(Activity.city_id == city.id, Activity.name == name)
             .first()
         )
-        if not exists:
+        if not existing:
             db.add(
                 Activity(
                     city_id=city.id,
@@ -117,8 +131,14 @@ def seed(db: Session) -> None:
                     category=category,
                     cost=cost,
                     duration=duration,
+                    description=description,
                 )
             )
+        else:
+            existing.category = category
+            existing.cost = cost
+            existing.duration = duration
+            existing.description = description
 
     trip = db.query(Trip).filter(Trip.user_id == user.id, Trip.name == "European Summer").first()
     if not trip:
