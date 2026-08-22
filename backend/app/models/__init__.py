@@ -4,6 +4,7 @@ from app.models.stop import Stop
 from app.models.trip import Trip
 from app.models.trip_activity import TripActivity
 from app.models.trip_share import TripShare
+from app.models.saved_destination import SavedDestination
 from app.models.user import User
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
   "Stop",
   "TripActivity",
   "TripShare",
+  "SavedDestination",
 ]
