@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
 import { clampCostIndex } from '@/lib/city-meta';
 import {
   budgetTotal,
@@ -35,7 +34,7 @@ export function TripCard({ trip, actions }) {
   const destinations =
     trip.stops.map((s) => s.cityName).filter(Boolean).join(' · ') || 'No stops yet';
   return (
-    <Card className="group overflow-hidden rounded-2xl border-border p-0 shadow-card transition-shadow hover:shadow-lg">
+    <Card className="group flex h-full flex-col overflow-hidden rounded-2xl border-border p-0 shadow-card transition-shadow hover:shadow-lg">
       <div className="relative h-40 overflow-hidden">
         <img
           src={trip.coverImage}
@@ -47,38 +46,40 @@ export function TripCard({ trip, actions }) {
           <StatusBadge trip={trip} />
         </div>
       </div>
-      <div className="space-y-3 p-4">
-        <div className="min-w-0">
-          <h3 className="truncate text-base font-bold">{trip.name}</h3>
-          <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{destinations}</span>
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <CalendarDays className="h-3.5 w-3.5" />
-            {formatRange(trip.startDate, trip.endDate)}
-          </span>
-          <span className="flex items-center gap-1">
-            <MapPin className="h-3.5 w-3.5" />
-            {trip.stops.length} {trip.stops.length === 1 ? 'stop' : 'stops'}
-          </span>
-          <span className="flex items-center gap-1">
-            <Wallet className="h-3.5 w-3.5" />
-            {currency(budgetTotal(trip.budget) || trip.plannedBudget)}
-          </span>
-        </div>
-        {status === 'ongoing' && (
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Trip progress</span>
-              <span>{tripProgress(trip)}%</span>
-            </div>
-            <Progress value={tripProgress(trip)} className="h-1.5" />
+      <div className="flex flex-1 flex-col justify-between p-4">
+        <div className="space-y-3">
+          <div className="min-w-0">
+            <h3 className="truncate text-base font-bold">{trip.name}</h3>
+            <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{destinations}</span>
+            </p>
           </div>
-        )}
-        <div className="flex items-center gap-2 pt-1">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <CalendarDays className="h-3.5 w-3.5" />
+              {formatRange(trip.startDate, trip.endDate)}
+            </span>
+            <span className="flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5" />
+              {trip.stops.length} {trip.stops.length === 1 ? 'stop' : 'stops'}
+            </span>
+            <span className="flex items-center gap-1">
+              <Wallet className="h-3.5 w-3.5" />
+              {currency(budgetTotal(trip.budget) || trip.plannedBudget)}
+            </span>
+          </div>
+          {status === 'ongoing' && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Trip progress</span>
+                <span>{tripProgress(trip)}%</span>
+              </div>
+              <Progress value={tripProgress(trip)} className="h-1.5" />
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2 pt-3 mt-auto">
           <Button asChild size="sm" className="rounded-full">
             <Link to={`/trips/${trip.id}`}>View Trip</Link>
           </Button>
@@ -183,11 +184,114 @@ export function EmptyState({ icon: Icon, title, description, action }) {
   );
 }
 
+export function TripCardSkeleton() {
+  return (
+    <Card className="overflow-hidden rounded-2xl border border-border p-0 shadow-card flex flex-col h-full bg-card">
+      <div className="h-40 bg-secondary/50 animate-pulse relative" />
+      <div className="p-4 space-y-4 flex-1 flex flex-col justify-between">
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <div className="h-5 w-3/4 bg-secondary/60 animate-pulse rounded" />
+            <div className="h-4 w-1/2 bg-secondary/45 animate-pulse rounded" />
+          </div>
+          <div className="flex gap-4">
+            <div className="h-4 w-16 bg-secondary/40 animate-pulse rounded" />
+            <div className="h-4 w-12 bg-secondary/40 animate-pulse rounded" />
+            <div className="h-4 w-16 bg-secondary/40 animate-pulse rounded" />
+          </div>
+        </div>
+        <div className="pt-2 mt-auto">
+          <div className="h-8 w-24 bg-secondary/70 animate-pulse rounded-full" />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+export function DestinationCardSkeleton() {
+  return (
+    <Card className="overflow-hidden rounded-2xl border border-border p-0 shadow-card flex flex-col h-full bg-card">
+      <div className="h-44 bg-secondary/50 animate-pulse relative" />
+      <div className="p-4 space-y-3.5 flex-1 flex flex-col justify-between">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <div className="h-4.5 w-1/3 bg-secondary/60 animate-pulse rounded" />
+            <div className="h-4 w-10 bg-secondary/40 animate-pulse rounded-full" />
+          </div>
+          <div className="h-3.5 w-1/4 bg-secondary/45 animate-pulse rounded" />
+          <div className="space-y-1.5 pt-2">
+            <div className="h-3 w-full bg-secondary/40 animate-pulse rounded" />
+            <div className="h-3 w-5/6 bg-secondary/40 animate-pulse rounded" />
+          </div>
+        </div>
+        <div className="flex items-center justify-between pt-3 mt-auto">
+          <div className="h-4 w-16 bg-secondary/45 animate-pulse rounded" />
+          <div className="h-8 w-24 bg-secondary/70 animate-pulse rounded-full" />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+export function BudgetDonutSkeleton() {
+  return (
+    <Card className="space-y-4 rounded-2xl border-border p-5 shadow-card bg-card">
+      <div className="space-y-2">
+        <div className="h-4 w-20 bg-secondary/60 animate-pulse rounded" />
+        <div className="h-5 w-32 bg-secondary/60 animate-pulse rounded" />
+      </div>
+      {/* Donut chart dummy circle */}
+      <div className="flex justify-center py-4">
+        <div className="h-36 w-36 rounded-full border-[10px] border-secondary/40 animate-pulse bg-transparent flex items-center justify-center">
+          <div className="h-16 w-16 rounded-full bg-background border border-border" />
+        </div>
+      </div>
+      {/* Two summary columns */}
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="rounded-xl bg-secondary/50 p-3 space-y-2 animate-pulse">
+          <div className="h-3 w-12 bg-secondary/70 rounded" />
+          <div className="h-4.5 w-16 bg-secondary/70 rounded" />
+        </div>
+        <div className="rounded-xl bg-secondary/50 p-3 space-y-2 animate-pulse">
+          <div className="h-3 w-12 bg-secondary/70 rounded" />
+          <div className="h-4.5 w-16 bg-secondary/70 rounded" />
+        </div>
+      </div>
+      <div className="h-10 w-full bg-secondary/60 animate-pulse rounded-full" />
+    </Card>
+  );
+}
+
+export function ActivityCardSkeleton() {
+  return (
+    <Card className="flex flex-col gap-3 rounded-2xl border border-border p-4 shadow-card sm:flex-row sm:items-center bg-card animate-pulse">
+      <div className="min-w-0 flex-1 space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="h-4.5 w-1/3 bg-secondary/60 rounded" />
+          <div className="h-4 w-12 bg-secondary/50 rounded-full" />
+        </div>
+        <div className="space-y-1.5 pt-1">
+          <div className="h-3 w-5/6 bg-secondary/40 rounded" />
+          <div className="h-3 w-2/3 bg-secondary/40 rounded" />
+        </div>
+        <div className="flex flex-wrap items-center gap-4 pt-1">
+          <div className="h-3 w-24 bg-secondary/40 rounded" />
+          <div className="h-3.5 w-10 bg-secondary/40 rounded" />
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center justify-between gap-3 sm:flex-col sm:items-end w-full sm:w-24 mt-2 sm:mt-0">
+        <div className="h-5 w-10 bg-secondary/55 rounded" />
+        <div className="h-8 w-20 bg-secondary/70 rounded-full" />
+      </div>
+    </Card>
+  );
+}
+
 export function LoadingGrid({ count = 3 }) {
   return (
     <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
-        <Skeleton key={i} className="h-64 rounded-2xl" />
+        <TripCardSkeleton key={i} />
       ))}
     </div>
   );

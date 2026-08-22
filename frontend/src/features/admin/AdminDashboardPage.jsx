@@ -14,7 +14,6 @@ export function AdminDashboardPage() {
   const navigate = useNavigate();
 
   const [overview, setOverview] = useState(null);
-  const [tripStats, setTripStats] = useState(null);
   const [popularCities, setPopularCities] = useState([]);
   const [popularActivities, setPopularActivities] = useState([]);
   const [users, setUsers] = useState([]);
@@ -30,7 +29,7 @@ export function AdminDashboardPage() {
 
     const loadData = async () => {
       try {
-        const [ov, ts, pc, pa, usrs] = await Promise.all([
+        const [ov, , pc, pa, usrs] = await Promise.all([
           fetchAdminOverview(),
           fetchAdminTripStats(),
           fetchAdminPopularCities(),
@@ -38,11 +37,10 @@ export function AdminDashboardPage() {
           fetchAdminUsers({ page: 1, pageSize: 10 }),
         ]);
         setOverview(ov);
-        setTripStats(ts);
         setPopularCities(pc);
         setPopularActivities(pa);
         setUsers(usrs.items);
-      } catch (err) {
+      } catch {
         toast.error('Failed to load admin data');
       } finally {
         setLoading(false);
@@ -58,7 +56,7 @@ export function AdminDashboardPage() {
     try {
       const data = await fetchAdminUsers({ page: 1, pageSize: 10, q: searchQuery });
       setUsers(data.items);
-    } catch (err) {
+    } catch {
       toast.error('Failed to search users');
     }
   };

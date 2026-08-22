@@ -80,6 +80,7 @@ function NavLinks({ onNavigate, isAdmin, hideLabels }) {
         <NavLink
           key={item.to}
           to={item.to}
+          end={item.to === '/trips'}
           onClick={onNavigate}
           className={({ isActive }) =>
             cn(
