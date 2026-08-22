@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { CalendarDays, Heart, MapPin, Star, Wallet } from 'lucide-react';
+import { CalendarDays, Clock, Heart, MapPin, Star, Wallet } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -97,7 +97,7 @@ export function DestinationCard({ city, saved, onSave, onAdd, className }) {
     <Card className={cn('group overflow-hidden rounded-2xl border-border p-0 shadow-card', className)}>
       <div className="relative h-36 overflow-hidden">
         <img
-          src={city.image}
+          src={city.image_url || city.image}
           alt={`${city.name}, ${city.country}`}
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -124,7 +124,7 @@ export function DestinationCard({ city, saved, onSave, onAdd, className }) {
           </div>
           <Badge variant="secondary" className="shrink-0 gap-1">
             <Star className="h-3 w-3 fill-accent text-accent" />
-            {city.popularity}
+            {city.popularity_score || city.popularity}
           </Badge>
         </div>
         <p className="line-clamp-2 text-sm text-muted-foreground">{city.description}</p>
@@ -139,6 +139,32 @@ export function DestinationCard({ city, saved, onSave, onAdd, className }) {
             </Button>
           )}
         </div>
+      </div>
+    </Card>
+  );
+}
+
+export function ActivityCard({ activity, city, onAdd }) {
+  return (
+    <Card className="flex flex-col gap-3 rounded-2xl border-border p-4 shadow-card sm:flex-row sm:items-center">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="font-semibold">{activity.name}</h3>
+          <Badge variant="secondary">{activity.category || activity.type}</Badge>
+        </div>
+        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{activity.description}</p>
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          {city && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{city.name}, {city.country}</span>}
+          <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{activity.duration}h</span>
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center justify-between gap-3 sm:flex-col sm:items-end">
+        <span className="text-base font-bold">{activity.cost === 0 ? "Free" : currency(activity.cost)}</span>
+        {onAdd && (
+          <Button size="sm" className="rounded-full" onClick={onAdd}>
+            Add to Trip
+          </Button>
+        )}
       </div>
     </Card>
   );
