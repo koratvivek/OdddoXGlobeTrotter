@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowDown,
   ArrowUp,
@@ -30,7 +30,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cityById } from '@/lib/city-meta';
+import { shareTripLink } from '@/lib/shares-api';
 import {
   activityHours,
   currency,
@@ -443,6 +443,7 @@ function StopCard({ stop, index, total, cities, onChanged }) {
 
 export function TripOverviewPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [trip, setTrip] = useState(null);
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -474,8 +475,14 @@ export function TripOverviewPage() {
   const stops = [...trip.stops].sort((a, b) => a.orderIndex - b.orderIndex);
   const stopsWithSiblings = stops.map((s, i) => ({ ...s, _siblings: stops, _index: i }));
 
-  const share = () => {
-    toast.info('Sharing comes in a later phase');
+  const share = async () => {
+    try {
+      const { slug } = await shareTripLink(id);
+      toast.success('Public link copied to clipboard');
+      navigate(`/share/${slug}`);
+    } catch (err) {
+      toast.error(err.message || 'Failed to create share link');
+    }
   };
 
   return (

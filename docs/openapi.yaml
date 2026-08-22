@@ -630,6 +630,44 @@ paths:
           description: Deleted
 
   /shares:
+    get:
+      tags: [shares]
+      summary: List public shared trips (community)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [popular, recent, budget]
+            default: popular
+      responses:
+        '200':
+          description: Paginated community shares
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedShareCards'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       tags: [shares]
       summary: Create public share link for a trip
@@ -658,14 +696,78 @@ paths:
           type: string
     get:
       tags: [shares]
-      summary: Get public share metadata by slug
+      summary: Get public share itinerary by slug
       responses:
         '200':
-          description: Share metadata
+          description: Public itinerary envelope
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TripShareRead'
+                $ref: '#/components/schemas/PublicShareResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /shares/public/{slug}/copy:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags: [shares]
+      summary: Copy a shared trip into the current user's account
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Trip copied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareCopyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /shares/{share_id}/like:
+    parameters:
+      - name: share_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags: [shares]
+      summary: Like a shared trip
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Like toggled on
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareLikeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [shares]
+      summary: Remove like from a shared trip
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Like removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareLikeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -1299,3 +1401,153 @@ components:
         created_at:
           type: string
           format: date-time
+
+    PublicShareResponse:
+      type: object
+      required: [slug, trip_id, name, start_date, end_date, author, stops, budget, created_at]
+      properties:
+        slug:
+          type: string
+        trip_id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        cover_photo:
+          type: string
+          nullable: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        budget_cap:
+          type: number
+          nullable: true
+        author:
+          type: object
+          properties:
+            first_name:
+              type: string
+            last_name:
+              type: string
+            name:
+              type: string
+        stops:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicShareStop'
+        budget:
+          $ref: '#/components/schemas/TripBudgetResponse'
+        created_at:
+          type: string
+          format: date-time
+
+    PublicShareStop:
+      type: object
+      properties:
+        id:
+          type: integer
+        city_id:
+          type: integer
+        city_name:
+          type: string
+        city_country:
+          type: string
+          nullable: true
+        city_image_url:
+          type: string
+          nullable: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        order_index:
+          type: integer
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/TripActivityRead'
+
+    ShareCardRead:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        trip_name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        cover_photo:
+          type: string
+          nullable: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        budget_cap:
+          type: number
+          nullable: true
+        author_name:
+          type: string
+        author_initials:
+          type: string
+        destination:
+          type: string
+        highlights:
+          type: array
+          items:
+            type: string
+        stop_count:
+          type: integer
+        activity_count:
+          type: integer
+        like_count:
+          type: integer
+        liked_by_me:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    PaginatedShareCards:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShareCardRead'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+
+    ShareLikeResponse:
+      type: object
+      properties:
+        like_count:
+          type: integer
+        liked_by_me:
+          type: boolean
+
+    ShareCopyResponse:
+      type: object
+      properties:
+        trip_id:
+          type: integer
+        name:
+          type: string

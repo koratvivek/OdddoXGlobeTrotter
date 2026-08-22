@@ -14,7 +14,9 @@ from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.models.activity import Activity
 from app.models.city import City
+from app.models.stop import Stop
 from app.models.trip import Trip
+from app.models.trip_share import TripShare
 from app.models.user import User
 
 CITIES = [
@@ -145,18 +147,49 @@ def seed(db: Session) -> None:
         start = date.today() + timedelta(days=30)
         end = start + timedelta(days=14)
         paris = city_map.get("Paris")
-        db.add(
-            Trip(
-                user_id=user.id,
-                name="European Summer",
-                start_date=start,
-                end_date=end,
-                description="Paris and Rome highlights.",
-                cover_photo=paris.image_url if paris else None,
-                is_public=False,
-                budget_cap=3500,
-            )
+        rome = city_map.get("Rome")
+        trip = Trip(
+            user_id=user.id,
+            name="European Summer",
+            start_date=start,
+            end_date=end,
+            description="Paris and Rome highlights.",
+            cover_photo=paris.image_url if paris else None,
+            is_public=False,
+            budget_cap=3500,
         )
+        db.add(trip)
+        db.flush()
+
+        if paris:
+            db.add(
+                Stop(
+                    trip_id=trip.id,
+                    city_id=paris.id,
+                    start_date=start,
+                    end_date=start + timedelta(days=6),
+                    order_index=0,
+                )
+            )
+        if rome:
+            db.add(
+                Stop(
+                    trip_id=trip.id,
+                    city_id=rome.id,
+                    start_date=start + timedelta(days=7),
+                    end_date=end,
+                    order_index=1,
+                )
+            )
+
+    share = (
+        db.query(TripShare)
+        .filter(TripShare.trip_id == trip.id)
+        .first()
+    )
+    if not share:
+        trip.is_public = True
+        db.add(TripShare(trip_id=trip.id, public_slug="eurosum24"))
 
     db.commit()
     print("Seed complete.")
