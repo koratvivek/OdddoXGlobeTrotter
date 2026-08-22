@@ -1,24 +1,26 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Compass, Search, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { ActivityCard, DestinationCard, EmptyState } from '@/components/gt/cards';
+import { ActivityCard, ActivityCardSkeleton, DestinationCard, DestinationCardSkeleton, EmptyState } from '@/components/gt/cards';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useStore } from '@/lib/store';
+import { useSavedDestinations } from '@/hooks/useSavedDestinations';
 import { apiClient } from '@/lib/apiClient';
 
 const categories = ["All", "Sightseeing", "Food", "Adventure", "Culture", "Relax", "Nightlife"];
 
 export function CatalogPage() {
-  const { saved, toggleSaved } = useStore();
+  const navigate = useNavigate();
+  const { saved, toggleSaved } = useSavedDestinations();
   const [query, setQuery] = useState("");
   const [region, setRegion] = useState("All");
   const [category, setCategory] = useState("All");
-  
+
   const [cities, setCities] = useState([]);
   const [activities, setActivities] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -120,7 +122,7 @@ export function CatalogPage() {
         />
       ) : (
         <>
-          {popular.length > 0 && (
+          {(isLoading || popular.length > 0) && (
             <section className="space-y-4">
               <div className="flex items-end justify-between gap-3">
                 <div>
@@ -129,39 +131,53 @@ export function CatalogPage() {
                 </div>
               </div>
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {popular.map((c) => (
-                  <DestinationCard
-                    key={c.id}
-                    city={c}
-                    saved={saved.includes(c.id)}
-                    onSave={() => {
-                      toggleSaved(c.id);
-                      toast.success(saved.includes(c.id) ? `${c.name} removed from saved` : `${c.name} saved`);
-                    }}
-                  />
-                ))}
+                {isLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <DestinationCardSkeleton key={i} />
+                  ))
+                ) : (
+                  popular.map((c) => (
+                    <DestinationCard
+                      key={c.id}
+                      city={c}
+                      saved={saved.includes(c.id)}
+                      onSave={() => {
+                        toggleSaved(c.id);
+                        toast.success(saved.includes(c.id) ? `${c.name} removed from saved` : `${c.name} saved`);
+                      }}
+                      onAdd={() => navigate('/trips/new?recommend_city_id=' + c.id)}
+                    />
+                  ))
+                )}
               </div>
             </section>
           )}
 
-          {recommended.length > 0 && (
+          {(isLoading || recommended.length > 0) && (
             <section className="space-y-4">
               <div>
                 <h2 className="text-xl font-bold">Recommended for you</h2>
                 <p className="text-sm text-muted-foreground">Based on the destinations you&apos;ve saved.</p>
               </div>
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {recommended.map((c) => (
-                  <DestinationCard
-                    key={c.id}
-                    city={c}
-                    saved={saved.includes(c.id)}
-                    onSave={() => {
-                      toggleSaved(c.id);
-                      toast.success(saved.includes(c.id) ? `${c.name} removed from saved` : `${c.name} saved`);
-                    }}
-                  />
-                ))}
+                {isLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <DestinationCardSkeleton key={i} />
+                  ))
+                ) : (
+                  recommended.map((c) => (
+                    <DestinationCard
+                      key={c.id}
+                      city={c}
+                      saved={saved.includes(c.id)}
+                      onSave={() => {
+                        toggleSaved(c.id);
+                        toast.success(saved.includes(c.id) ? `${c.name} removed from saved` : `${c.name} saved`);
+                      }}
+                      onAdd={() => navigate('/trips/new?recommend_city_id=' + c.id)}
+                    />
+                  ))
+                )}
               </div>
             </section>
           )}
@@ -171,15 +187,21 @@ export function CatalogPage() {
               <h2 className="text-xl font-bold">Popular activities</h2>
               <p className="text-sm text-muted-foreground">Highest rated experiences across every city.</p>
             </div>
-            {filteredActivities.length === 0 && !isLoading ? (
+            {isLoading ? (
+              <div className="grid gap-4 xl:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <ActivityCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : filteredActivities.length === 0 ? (
               <p className="text-sm text-muted-foreground">No activities match these filters.</p>
             ) : (
               <div className="grid gap-4 xl:grid-cols-2">
                 {filteredActivities.slice(0, 8).map((a) => (
-                  <ActivityCard 
-                    key={a.id} 
-                    activity={a} 
-                    city={cities.find(city => city.id === (a.city_id || a.cityId))} 
+                  <ActivityCard
+                    key={a.id}
+                    activity={a}
+                    city={cities.find(city => city.id === (a.city_id || a.cityId))}
                   />
                 ))}
               </div>
@@ -192,21 +214,34 @@ export function CatalogPage() {
               <h2 className="text-xl font-bold">Travel inspiration</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
-              {cheapest.map((a) => {
-                const city = cities.find(city => city.id === (a.city_id || a.cityId));
-                return (
-                  <Card key={a.id} className="overflow-hidden rounded-2xl border-border p-0 shadow-card flex flex-col">
-                    <img src={city?.image_url || city?.image} alt={city?.name ?? "Destination"} loading="lazy" className="h-28 w-full object-cover" />
-                    <div className="space-y-1 p-4 flex-1">
-                      <Badge variant="secondary">{a.category || a.type}</Badge>
-                      <p className="font-semibold text-sm line-clamp-1">{a.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {city?.name} · {a.cost === 0 ? "Free" : `from $${a.cost}`}
-                      </p>
+              {isLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <Card key={i} className="overflow-hidden rounded-2xl border border-border p-0 shadow-card flex flex-col animate-pulse bg-card">
+                    <div className="h-28 w-full bg-secondary/40" />
+                    <div className="space-y-2.5 p-4 flex-1">
+                      <div className="h-4 w-12 bg-secondary/50 rounded-full" />
+                      <div className="h-4 w-3/4 bg-secondary/60 rounded" />
+                      <div className="h-3 w-1/2 bg-secondary/40 rounded" />
                     </div>
                   </Card>
-                );
-              })}
+                ))
+              ) : (
+                cheapest.map((a) => {
+                  const city = cities.find(city => city.id === (a.city_id || a.cityId));
+                  return (
+                    <Card key={a.id} className="overflow-hidden rounded-2xl border-border p-0 shadow-card flex flex-col bg-card">
+                      <img src={city?.image_url || city?.image} alt={city?.name ?? "Destination"} loading="lazy" className="h-28 w-full object-cover" />
+                      <div className="space-y-1 p-4 flex-1">
+                        <Badge variant="secondary">{a.category || a.type}</Badge>
+                        <p className="font-semibold text-sm line-clamp-1">{a.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {city?.name} · {a.cost === 0 ? "Free" : `from $${a.cost}`}
+                        </p>
+                      </div>
+                    </Card>
+                  );
+                })
+              )}
             </div>
           </section>
         </>

@@ -38,3 +38,4 @@ class UserRead(UserBase):
     id: int
     is_admin: bool
     created_at: datetime
+    trip_count: int = 0

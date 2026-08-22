@@ -4,7 +4,9 @@ import { SignupPage } from '@/features/auth/pages/SignupPage';
 import { TripBudgetPage } from '@/features/budget/TripBudgetPage';
 import { CatalogPage } from '@/features/catalog/CatalogPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
-import { ProfilePlaceholderPage } from '@/features/profile/ProfilePlaceholderPage';
+import { AdminDashboardPage } from '@/features/admin/AdminDashboardPage';
+import { ProfilePage } from '@/features/profile/ProfilePage';
+import { SettingsPage } from '@/features/profile/SettingsPage';
 import { CreateTripPage } from '@/features/trips/CreateTripPage';
 import { EditTripPage } from '@/features/trips/EditTripPage';
 import { TripItineraryPage } from '@/features/trips/TripItineraryPage';
@@ -59,7 +61,7 @@ export const router = createBrowserRouter([
     path: '/profile',
     element: (
       <PlaceholderWithShell title="Profile" subtitle="Your account">
-        <ProfilePlaceholderPage />
+        <ProfilePage />
       </PlaceholderWithShell>
     ),
   },
@@ -67,7 +69,7 @@ export const router = createBrowserRouter([
     path: '/settings',
     element: (
       <PlaceholderWithShell title="Settings" subtitle="Preferences">
-        <ProfilePlaceholderPage />
+        <SettingsPage />
       </PlaceholderWithShell>
     ),
   },
@@ -75,7 +77,7 @@ export const router = createBrowserRouter([
     path: '/admin',
     element: (
       <PlaceholderWithShell title="Admin Dashboard" subtitle="Platform analytics">
-        <ProfilePlaceholderPage />
+        <AdminDashboardPage />
       </PlaceholderWithShell>
     ),
   },
@@ -85,11 +87,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/trips/:id/budget',
-    element: (
-      <PlaceholderWithShell title="Trip Budget" subtitle="Trip cost breakdown">
-        <TripBudgetPage />
-      </PlaceholderWithShell>
-    ),
+    element: <TripBudgetPage />,
   },
   { path: '*', element: <Navigate to="/dashboard" replace /> },
 ]);

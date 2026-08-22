@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     activities,
+    admin,
     auth,
     cities,
     shares,
@@ -21,3 +22,4 @@ api_router.include_router(activities.router)
 api_router.include_router(stops.router)
 api_router.include_router(trip_activities.router)
 api_router.include_router(shares.router)
+api_router.include_router(admin.router)
