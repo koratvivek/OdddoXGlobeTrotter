@@ -1,5 +1,8 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
+from app.core.deps import get_db
+from app.models.city import City
 from app.schemas.city import CityCreate, CityRead, CityUpdate
 
 router = APIRouter(prefix="/cities", tags=["cities"])
@@ -13,8 +16,8 @@ def _not_implemented() -> None:
 
 
 @router.get("", response_model=list[CityRead])
-def list_cities() -> list[CityRead]:
-    _not_implemented()
+def list_cities(db: Session = Depends(get_db)) -> list[CityRead]:
+    return db.query(City).all()
 
 
 @router.post("", response_model=CityRead, status_code=status.HTTP_201_CREATED)

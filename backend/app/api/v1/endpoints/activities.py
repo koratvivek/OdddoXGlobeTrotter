@@ -1,5 +1,8 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
+from app.core.deps import get_db
+from app.models.activity import Activity
 from app.schemas.activity import ActivityCreate, ActivityRead, ActivityUpdate
 
 router = APIRouter(prefix="/activities", tags=["activities"])
@@ -13,8 +16,8 @@ def _not_implemented() -> None:
 
 
 @router.get("", response_model=list[ActivityRead])
-def list_activities() -> list[ActivityRead]:
-    _not_implemented()
+def list_activities(db: Session = Depends(get_db)) -> list[ActivityRead]:
+    return db.query(Activity).all()
 
 
 @router.post("", response_model=ActivityRead, status_code=status.HTTP_201_CREATED)
