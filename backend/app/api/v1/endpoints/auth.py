@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user, get_db
 from app.models.user import User
 from app.schemas.auth import (
+    ChangePasswordRequest,
     ForgotPasswordRequest,
     LoginRequest,
     SignupRequest,
@@ -33,6 +34,18 @@ def forgot_password(
     payload: ForgotPasswordRequest, db: Session = Depends(get_db)
 ) -> MessageResponse:
     message = AuthService.forgot_password(db, payload.email)
+    return MessageResponse(message=message)
+
+
+@router.post("/change-password", response_model=MessageResponse)
+def change_password(
+    payload: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> MessageResponse:
+    message = AuthService.change_password(
+        db, current_user, payload.current_password, payload.new_password
+    )
     return MessageResponse(message=message)
 
 

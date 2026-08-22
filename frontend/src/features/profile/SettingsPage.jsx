@@ -7,14 +7,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
-import { updateProfile } from '@/lib/users-api';
+import { changePassword, updateProfile } from '@/lib/users-api';
 
 export function SettingsPage() {
   const { user, refreshUser } = useAuth();
   
   const [email, setEmail] = useState('');
   const [language, setLanguage] = useState('en');
-  const [isSaving, setIsSaving] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -36,7 +39,28 @@ export function SettingsPage() {
     }
   };
 
-  if (!user) return null;
+  const handleChangePassword = async () => {
+    if (newPassword.length < 8) {
+      toast.error('New password must be at least 8 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    setIsSavingPassword(true);
+    try {
+      await changePassword(currentPassword, newPassword);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      toast.success('Password updated');
+    } catch (err) {
+      toast.error(err.message || 'Failed to change password');
+    } finally {
+      setIsSavingPassword(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -74,17 +98,37 @@ export function SettingsPage() {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label>Password</Label>
-            <div className="flex gap-2">
-              <Input type="password" value="********" disabled />
-              <Button variant="outline" disabled>
-                Change
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Password change functionality is coming in a future update.
-            </p>
+          <div className="space-y-3">
+            <Label>Change password</Label>
+            <Input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Current password"
+              autoComplete="current-password"
+            />
+            <Input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="New password (8+ characters)"
+              autoComplete="new-password"
+            />
+            <Input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm new password"
+              autoComplete="new-password"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleChangePassword}
+              disabled={isSavingPassword}
+            >
+              {isSavingPassword ? 'Updating…' : 'Update password'}
+            </Button>
           </div>
 
           <div className="pt-4">

@@ -70,3 +70,69 @@ def test_login_wrong_password_returns_401(client):
         json={"email": "wrongpass@example.com", "password": "not-the-password"},
     )
     assert response.status_code == 401
+
+
+def test_change_password_requires_auth(client):
+    response = client.post(
+        "/api/v1/auth/change-password",
+        json={"current_password": "password123", "new_password": "newpass123"},
+    )
+    assert response.status_code == 401
+
+
+def test_change_password_wrong_current(client):
+    client.post(
+        "/api/v1/auth/signup",
+        json={
+            "first_name": "Ch",
+            "last_name": "Pass",
+            "email": "changepass@example.com",
+            "password": "password123",
+        },
+    )
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "changepass@example.com", "password": "password123"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    response = client.post(
+        "/api/v1/auth/change-password",
+        headers=headers,
+        json={"current_password": "wrong-old", "new_password": "newpass123"},
+    )
+    assert response.status_code == 401
+
+
+def test_change_password_success(client):
+    client.post(
+        "/api/v1/auth/signup",
+        json={
+            "first_name": "New",
+            "last_name": "Pass",
+            "email": "newpass@example.com",
+            "password": "password123",
+        },
+    )
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "newpass@example.com", "password": "password123"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    response = client.post(
+        "/api/v1/auth/change-password",
+        headers=headers,
+        json={"current_password": "password123", "new_password": "newpass123"},
+    )
+    assert response.status_code == 200
+
+    old = client.post(
+        "/api/v1/auth/login",
+        json={"email": "newpass@example.com", "password": "password123"},
+    )
+    assert old.status_code == 401
+
+    fresh = client.post(
+        "/api/v1/auth/login",
+        json={"email": "newpass@example.com", "password": "newpass123"},
+    )
+    assert fresh.status_code == 200

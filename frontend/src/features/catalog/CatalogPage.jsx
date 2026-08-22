@@ -5,73 +5,126 @@ import { toast } from 'sonner';
 
 import { ActivityCard, ActivityCardSkeleton, DestinationCard, DestinationCardSkeleton, EmptyState } from '@/components/gt/cards';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/Input';
+import { Input } from '@/components/ui/input';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSavedDestinations } from '@/hooks/useSavedDestinations';
-import { apiClient } from '@/lib/apiClient';
+import { fetchAllCities, fetchActivitiesPage } from '@/lib/trips-api';
 
-const categories = ["All", "Sightseeing", "Food", "Adventure", "Culture", "Relax", "Nightlife"];
+const categories = ['All', 'Sightseeing', 'Food', 'Adventure', 'Culture', 'Relax', 'Nightlife'];
 
 export function CatalogPage() {
   const navigate = useNavigate();
   const { saved, toggleSaved } = useSavedDestinations();
-  const [query, setQuery] = useState("");
-  const [region, setRegion] = useState("All");
-  const [category, setCategory] = useState("All");
+  const [query, setQuery] = useState('');
+  const [region, setRegion] = useState('All');
+  const [category, setCategory] = useState('All');
+  const [page, setPage] = useState(1);
 
   const [cities, setCities] = useState([]);
-  const [activities, setActivities] = useState([]);
+  const [activityData, setActivityData] = useState({ items: [], total_pages: 0, total: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [citiesData, activitiesData] = await Promise.all([
-          apiClient('/cities?page_size=100'),
-          apiClient('/activities')
-        ]);
-        setCities(citiesData.items || citiesData);
-        setActivities(activitiesData.items || activitiesData);
-      } catch (err) {
-        toast.error("Failed to load catalog data");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchData();
+    let cancelled = false;
+    fetchAllCities()
+      .then((list) => {
+        if (!cancelled) setCities(list);
+      })
+      .catch((err) => {
+        toast.error(err.message || 'Failed to load destinations');
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const regions = useMemo(() => {
     const allRegions = cities.map((c) => c.region).filter(Boolean);
-    return ["All", ...Array.from(new Set(allRegions))];
+    return ['All', ...Array.from(new Set(allRegions)).sort()];
   }, [cities]);
+
+  const countriesInRegion = useMemo(() => {
+    if (region === 'All') return [];
+    return [...new Set(cities.filter((c) => c.region === region).map((c) => c.country).filter(Boolean))];
+  }, [cities, region]);
+
+  const apiCountry = countriesInRegion.length === 1 ? countriesInRegion[0] : undefined;
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, region, category]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setActivitiesLoading(true);
+    fetchActivitiesPage({
+      page,
+      pageSize: 20,
+      q: query.trim() || undefined,
+      category: category === 'All' ? undefined : category,
+      country: apiCountry,
+    })
+      .then((data) => {
+        if (!cancelled) setActivityData(data);
+      })
+      .catch((err) => {
+        toast.error(err.message || 'Failed to load activities');
+      })
+      .finally(() => {
+        if (!cancelled) setActivitiesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [page, query, category, apiCountry]);
 
   const filteredCities = useMemo(() => {
     const q = query.trim().toLowerCase();
     return cities
-      .filter((c) => (region === "All" ? true : c.region === region))
+      .filter((c) => (region === 'All' ? true : c.region === region))
       .filter((c) => !q || `${c.name} ${c.country} ${c.description}`.toLowerCase().includes(q))
-      .sort((a, b) => (b.popularity_score || b.popularity) - (a.popularity_score || a.popularity));
+      .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
   }, [cities, query, region]);
 
+  const cityByIdMap = useMemo(() => {
+    const map = new Map();
+    cities.forEach((c) => map.set(c.id, c));
+    return map;
+  }, [cities]);
+
   const filteredActivities = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return activities
-      .filter((a) => (category === "All" ? true : (a.category || a.type) === category))
-      .filter((a) => {
-        const c = cities.find(city => city.id === (a.city_id || a.cityId));
-        if (region !== "All" && c?.region !== region) return false;
-        return !q || `${a.name} ${a.description} ${c?.name ?? ""}`.toLowerCase().includes(q);
-      })
-      .sort((a, b) => (b.popularity || 0) - (a.popularity || 0)); // Assuming activities have popularity
-  }, [activities, query, region, category, cities]);
+    if (region === 'All' || apiCountry) return activityData.items;
+    const ids = new Set(cities.filter((c) => c.region === region).map((c) => c.id));
+    return activityData.items.filter((a) => ids.has(a.cityId));
+  }, [activityData.items, region, apiCountry, cities]);
 
   const popular = filteredCities.slice(0, 3);
   const recommended = filteredCities.slice(3, 6);
-  const cheapest = [...activities].sort((a, b) => a.cost - b.cost).slice(0, 3);
+  const cheapest = [...filteredActivities].sort((a, b) => a.cost - b.cost).slice(0, 3);
+
+  const pages = useMemo(() => {
+    const total = activityData.total_pages || 0;
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }, [activityData.total_pages]);
+
+  const goToTrip = (cityId) => {
+    if (!cityId) return;
+    navigate(`/trips/new?recommend_city_id=${cityId}`);
+  };
 
   return (
     <div className="space-y-10">
@@ -92,20 +145,30 @@ export function CatalogPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {regions.map((r) => <SelectItem key={r} value={r}>{r === "All" ? "All regions" : r}</SelectItem>)}
+              {regions.map((r) => (
+                <SelectItem key={r} value={r}>
+                  {r === 'All' ? 'All regions' : r}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <Select value={category} onValueChange={(v) => setCategory(v)}>
+          <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="h-11 rounded-xl" aria-label="Filter activities by category">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {categories.map((c) => <SelectItem key={c} value={c}>{c === "All" ? "All activities" : c}</SelectItem>)}
+              {categories.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c === 'All' ? 'All activities' : c}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
         <p className="text-xs text-muted-foreground">
-          {isLoading ? "Loading..." : `${filteredCities.length} destinations · ${filteredActivities.length} activities`}
+          {isLoading || activitiesLoading
+            ? 'Loading...'
+            : `${filteredCities.length} destinations · ${activityData.total || filteredActivities.length} activities`}
         </p>
       </Card>
 
@@ -115,7 +178,14 @@ export function CatalogPage() {
           title="Nothing matches that search"
           description="Try a different city name, region or activity category."
           action={
-            <Button className="rounded-full" onClick={() => { setQuery(""); setRegion("All"); setCategory("All"); }}>
+            <Button
+              className="rounded-full"
+              onClick={() => {
+                setQuery('');
+                setRegion('All');
+                setCategory('All');
+              }}
+            >
               Clear filters
             </Button>
           }
@@ -131,24 +201,20 @@ export function CatalogPage() {
                 </div>
               </div>
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {isLoading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <DestinationCardSkeleton key={i} />
-                  ))
-                ) : (
-                  popular.map((c) => (
-                    <DestinationCard
-                      key={c.id}
-                      city={c}
-                      saved={saved.includes(c.id)}
-                      onSave={() => {
-                        toggleSaved(c.id);
-                        toast.success(saved.includes(c.id) ? `${c.name} removed from saved` : `${c.name} saved`);
-                      }}
-                      onAdd={() => navigate('/trips/new?recommend_city_id=' + c.id)}
-                    />
-                  ))
-                )}
+                {isLoading
+                  ? Array.from({ length: 3 }).map((_, i) => <DestinationCardSkeleton key={i} />)
+                  : popular.map((c) => (
+                      <DestinationCard
+                        key={c.id}
+                        city={c}
+                        saved={saved.includes(c.id)}
+                        onSave={() => {
+                          toggleSaved(c.id);
+                          toast.success(saved.includes(c.id) ? `${c.name} removed from saved` : `${c.name} saved`);
+                        }}
+                        onAdd={() => goToTrip(c.id)}
+                      />
+                    ))}
               </div>
             </section>
           )}
@@ -160,24 +226,20 @@ export function CatalogPage() {
                 <p className="text-sm text-muted-foreground">Based on the destinations you&apos;ve saved.</p>
               </div>
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {isLoading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <DestinationCardSkeleton key={i} />
-                  ))
-                ) : (
-                  recommended.map((c) => (
-                    <DestinationCard
-                      key={c.id}
-                      city={c}
-                      saved={saved.includes(c.id)}
-                      onSave={() => {
-                        toggleSaved(c.id);
-                        toast.success(saved.includes(c.id) ? `${c.name} removed from saved` : `${c.name} saved`);
-                      }}
-                      onAdd={() => navigate('/trips/new?recommend_city_id=' + c.id)}
-                    />
-                  ))
-                )}
+                {isLoading
+                  ? Array.from({ length: 3 }).map((_, i) => <DestinationCardSkeleton key={i} />)
+                  : recommended.map((c) => (
+                      <DestinationCard
+                        key={c.id}
+                        city={c}
+                        saved={saved.includes(c.id)}
+                        onSave={() => {
+                          toggleSaved(c.id);
+                          toast.success(saved.includes(c.id) ? `${c.name} removed from saved` : `${c.name} saved`);
+                        }}
+                        onAdd={() => goToTrip(c.id)}
+                      />
+                    ))}
               </div>
             </section>
           )}
@@ -187,7 +249,7 @@ export function CatalogPage() {
               <h2 className="text-xl font-bold">Popular activities</h2>
               <p className="text-sm text-muted-foreground">Highest rated experiences across every city.</p>
             </div>
-            {isLoading ? (
+            {activitiesLoading ? (
               <div className="grid gap-4 xl:grid-cols-2">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <ActivityCardSkeleton key={i} />
@@ -197,14 +259,40 @@ export function CatalogPage() {
               <p className="text-sm text-muted-foreground">No activities match these filters.</p>
             ) : (
               <div className="grid gap-4 xl:grid-cols-2">
-                {filteredActivities.slice(0, 8).map((a) => (
+                {filteredActivities.map((a) => (
                   <ActivityCard
                     key={a.id}
                     activity={a}
-                    city={cities.find(city => city.id === (a.city_id || a.cityId))}
+                    city={cityByIdMap.get(a.cityId)}
+                    onAdd={() => goToTrip(a.cityId)}
                   />
                 ))}
               </div>
+            )}
+            {activityData.total_pages > 1 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      disabled={page <= 1}
+                      onClick={() => page > 1 && setPage((p) => p - 1)}
+                    />
+                  </PaginationItem>
+                  {pages.slice(0, 7).map((p) => (
+                    <PaginationItem key={p}>
+                      <PaginationLink isActive={p === page} onClick={() => setPage(p)}>
+                        {p}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      disabled={page >= activityData.total_pages}
+                      onClick={() => page < activityData.total_pages && setPage((p) => p + 1)}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             )}
           </section>
 
@@ -214,28 +302,39 @@ export function CatalogPage() {
               <h2 className="text-xl font-bold">Travel inspiration</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
-              {isLoading ? (
+              {activitiesLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <Card key={i} className="overflow-hidden rounded-2xl border border-border p-0 shadow-card flex flex-col animate-pulse bg-card">
+                  <Card
+                    key={i}
+                    className="flex flex-col animate-pulse overflow-hidden rounded-2xl border border-border bg-card p-0 shadow-card"
+                  >
                     <div className="h-28 w-full bg-secondary/40" />
                     <div className="space-y-2.5 p-4 flex-1">
-                      <div className="h-4 w-12 bg-secondary/50 rounded-full" />
-                      <div className="h-4 w-3/4 bg-secondary/60 rounded" />
-                      <div className="h-3 w-1/2 bg-secondary/40 rounded" />
+                      <div className="h-4 w-12 rounded-full bg-secondary/50" />
+                      <div className="h-4 w-3/4 rounded bg-secondary/60" />
+                      <div className="h-3 w-1/2 rounded bg-secondary/40" />
                     </div>
                   </Card>
                 ))
               ) : (
                 cheapest.map((a) => {
-                  const city = cities.find(city => city.id === (a.city_id || a.cityId));
+                  const city = cityByIdMap.get(a.cityId);
                   return (
-                    <Card key={a.id} className="overflow-hidden rounded-2xl border-border p-0 shadow-card flex flex-col bg-card">
-                      <img src={city?.image_url || city?.image} alt={city?.name ?? "Destination"} loading="lazy" className="h-28 w-full object-cover" />
-                      <div className="space-y-1 p-4 flex-1">
+                    <Card
+                      key={a.id}
+                      className="flex flex-col overflow-hidden rounded-2xl border-border bg-card p-0 shadow-card"
+                    >
+                      <img
+                        src={city?.image_url || city?.image}
+                        alt={city?.name ?? 'Destination'}
+                        loading="lazy"
+                        className="h-28 w-full object-cover"
+                      />
+                      <div className="flex-1 space-y-1 p-4">
                         <Badge variant="secondary">{a.category || a.type}</Badge>
-                        <p className="font-semibold text-sm line-clamp-1">{a.name}</p>
+                        <p className="line-clamp-1 text-sm font-semibold">{a.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {city?.name} · {a.cost === 0 ? "Free" : `from $${a.cost}`}
+                          {city?.name} · {a.cost === 0 ? 'Free' : `from $${a.cost}`}
                         </p>
                       </div>
                     </Card>

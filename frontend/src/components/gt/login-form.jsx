@@ -58,13 +58,16 @@ export function LoginScreen() {
 
   const handleForgotPassword = async () => {
     try {
-      await apiClient('/auth/forgot-password', {
+      const data = await apiClient('/auth/forgot-password', {
         method: 'POST',
         body: JSON.stringify({ email }),
       });
-      toast.info('Password reset link sent to your email.');
+      toast.info(
+        data.message ||
+          'Password reset by email is not available yet. Sign in and change it in Settings.',
+      );
     } catch {
-      toast.info('Password reset link sent to your email.');
+      toast.info('Password reset by email is not available yet. Sign in and change it in Settings.');
     }
   };
 

@@ -83,6 +83,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageResponse'
 
+  /auth/change-password:
+    post:
+      tags: [auth]
+      summary: Change the current user's password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /auth/me:
     get:
       tags: [auth]
@@ -349,6 +371,10 @@ paths:
           schema:
             type: string
         - name: category
+          in: query
+          schema:
+            type: string
+        - name: country
           in: query
           schema:
             type: string
@@ -925,6 +951,17 @@ components:
         email:
           type: string
           format: email
+
+    ChangePasswordRequest:
+      type: object
+      required: [current_password, new_password]
+      properties:
+        current_password:
+          type: string
+        new_password:
+          type: string
+          minLength: 8
+          maxLength: 128
 
     TokenResponse:
       type: object

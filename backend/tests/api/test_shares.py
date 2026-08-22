@@ -241,3 +241,31 @@ def test_unlike_decrements(client):
 def test_like_without_token_401(client):
     response = client.post("/api/v1/shares/1/like")
     assert response.status_code == 401
+
+
+def test_public_toggle_creates_community_share(client):
+    owner = _auth_headers(client, "toggle-owner@example.com")
+    viewer = _auth_headers(client, "toggle-viewer@example.com")
+    trip = _create_trip(client, owner, name="Public Toggle Trip")
+
+    patch = client.patch(
+        f"/api/v1/trips/{trip['id']}",
+        headers=owner,
+        json={"is_public": True},
+    )
+    assert patch.status_code == 200
+    assert patch.json()["is_public"] is True
+
+    listing = client.get("/api/v1/shares", headers=viewer)
+    assert listing.status_code == 200
+    names = [item["trip_name"] for item in listing.json()["items"]]
+    assert "Public Toggle Trip" in names
+
+    client.patch(
+        f"/api/v1/trips/{trip['id']}",
+        headers=owner,
+        json={"is_public": False},
+    )
+    listing = client.get("/api/v1/shares", headers=viewer)
+    names = [item["trip_name"] for item in listing.json()["items"]]
+    assert "Public Toggle Trip" not in names

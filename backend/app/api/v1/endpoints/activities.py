@@ -24,10 +24,11 @@ def list_activities(
     city_id: int | None = None,
     q: str | None = None,
     category: str | None = None,
+    country: str | None = None,
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
 ) -> PaginatedResponse[ActivityRead]:
-    return ActivityService.list_activities(db, page, page_size, city_id, q, category)
+    return ActivityService.list_activities(db, page, page_size, city_id, q, category, country)
 
 
 @router.post("", response_model=ActivityRead, status_code=status.HTTP_201_CREATED)

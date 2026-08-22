@@ -56,7 +56,21 @@ class AuthService:
 
     @staticmethod
     def forgot_password(_db: Session, _email: str) -> str:
-        return "If an account exists for that email, a reset link has been sent."
+        return (
+            "Password reset by email is not available yet. "
+            "Sign in and change it in Settings."
+        )
+
+    @staticmethod
+    def change_password(db: Session, user: User, current_password: str, new_password: str) -> str:
+        if not verify_password(current_password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Current password is incorrect.",
+            )
+        user.password_hash = hash_password(new_password)
+        db.commit()
+        return "Password updated."
 
     @staticmethod
     def get_user_by_id(db: Session, user_id: int) -> User:

@@ -6,6 +6,7 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.trip import TripBudgetResponse, TripCreate, TripRead, TripUpdate
 from app.services.budget import BudgetService
+from app.services.shares import ShareService
 from app.services.trips import TripService
 router = APIRouter(prefix="/trips", tags=["trips"])
 
@@ -29,7 +30,11 @@ def create_trip(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> TripRead:
-    return TripService.create_trip(db, current_user, payload)
+    trip = TripService.create_trip(db, current_user, payload)
+    if payload.is_public:
+        ShareService.create_share(db, current_user, trip.id)
+        return TripService.get_trip(db, trip.id, current_user)
+    return trip
 
 
 @router.get("/{trip_id}", response_model=TripRead)
@@ -48,7 +53,11 @@ def update_trip(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> TripRead:
-    return TripService.update_trip(db, trip_id, current_user, payload)
+    trip = TripService.update_trip(db, trip_id, current_user, payload)
+    if payload.is_public is not None:
+        ShareService.sync_public_flag(db, current_user, trip_id, payload.is_public)
+        return TripService.get_trip(db, trip_id, current_user)
+    return trip
 
 
 @router.delete("/{trip_id}", status_code=status.HTTP_204_NO_CONTENT)

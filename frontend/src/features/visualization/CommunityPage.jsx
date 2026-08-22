@@ -38,26 +38,41 @@ function authOrLogin(navigate) {
 export function CommunityPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const [appliedQuery, setAppliedQuery] = useState('');
   const [sort, setSort] = useState('popular');
   const [page, setPage] = useState(1);
   const [data, setData] = useState({ items: [], total_pages: 0 });
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAppliedQuery((current) => (current === query ? current : query));
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await fetchShares({ page, pageSize: 20, q: query || undefined, sort });
+      const result = await fetchShares({
+        page,
+        pageSize: 20,
+        q: appliedQuery || undefined,
+        sort,
+      });
       setData(result);
     } catch (err) {
       if (String(err.message).toLowerCase().includes('authenticated')) {
         navigate('/login');
       } else {
         toast.error(err.message || 'Failed to load community');
+        setData({ items: [], total_pages: 0 });
       }
     } finally {
       setLoading(false);
     }
-  }, [navigate, page, query, sort]);
+  }, [navigate, page, appliedQuery, sort]);
 
   useEffect(() => {
     load();
@@ -65,7 +80,7 @@ export function CommunityPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [query, sort]);
+  }, [sort]);
 
   const pages = useMemo(() => {
     const total = data.total_pages || 0;

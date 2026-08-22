@@ -189,6 +189,39 @@ class ShareService:
         db.commit()
 
     @staticmethod
+    def revoke_share_for_trip(db: Session, trip: Trip) -> None:
+        shares = db.query(TripShare).filter(TripShare.trip_id == trip.id).all()
+        for share in shares:
+            db.delete(share)
+        trip.is_public = False
+        db.commit()
+
+    @staticmethod
+    def sync_public_flag(db: Session, user: User, trip_id: int, is_public: bool) -> None:
+        if is_public:
+            ShareService.create_share(db, user, trip_id)
+        else:
+            trip = TripService.get_owned_trip(db, trip_id, user)
+            ShareService.revoke_share_for_trip(db, trip)
+
+    @staticmethod
+    def ensure_shares_for_public_trips(db: Session) -> None:
+        """Backfill share rows for trips marked public from the edit toggle."""
+        public_without_share = (
+            db.query(Trip)
+            .outerjoin(TripShare, TripShare.trip_id == Trip.id)
+            .filter(Trip.is_public.is_(True), TripShare.id.is_(None))
+            .all()
+        )
+        created = False
+        for trip in public_without_share:
+            db.add(TripShare(trip_id=trip.id, public_slug=_generate_slug(db)))
+            db.flush()
+            created = True
+        if created:
+            db.commit()
+
+    @staticmethod
     def get_public_share(db: Session, slug: str) -> PublicShareResponse:
         share, trip = _load_public_trip(db, slug)
         return _build_public_share(db, share, trip)
@@ -202,6 +235,7 @@ class ShareService:
         q: str | None = None,
         sort: str = "popular",
     ) -> PaginatedResponse[ShareCardRead]:
+        ShareService.ensure_shares_for_public_trips(db)
         like_counts = _like_count_subquery(db)
         like_count_col = func.coalesce(like_counts.c.like_count, 0)
 

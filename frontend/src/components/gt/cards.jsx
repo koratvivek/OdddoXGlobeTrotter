@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { clampCostIndex } from '@/lib/city-meta';
 import {
+  activityHours,
   budgetTotal,
   currency,
   formatRange,
@@ -156,7 +157,7 @@ export function ActivityCard({ activity, city, onAdd }) {
         <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{activity.description}</p>
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           {city && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{city.name}, {city.country}</span>}
-          <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{activity.duration}h</span>
+          <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{activityHours(activity.duration)}h</span>
         </div>
       </div>
       <div className="flex shrink-0 items-center justify-between gap-3 sm:flex-col sm:items-end">
