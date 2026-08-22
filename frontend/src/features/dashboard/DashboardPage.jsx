@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSavedDestinations } from '@/hooks/useSavedDestinations';
 import { DEFAULT_COVER } from '@/lib/city-meta';
 import { budgetTotal, currency, tripStatus } from '@/lib/trip-utils';
-import { fetchAllCities, fetchTrips } from '@/lib/trips-api';
+import { fetchAllCities, fetchTripBudget, fetchTrips } from '@/lib/trips-api';
 
 export function DashboardPage() {
   const { user } = useAuth();
@@ -19,6 +19,7 @@ export function DashboardPage() {
   const [trips, setTrips] = useState([]);
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [focusBudget, setFocusBudget] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,6 +47,37 @@ export function DashboardPage() {
 
   const active = useMemo(() => trips.filter((t) => tripStatus(t) !== 'completed').slice(0, 6), [trips]);
   const focus = active[0];
+
+  useEffect(() => {
+    let cancelled = false;
+    if (focus?.id) {
+      fetchTripBudget(focus.id)
+        .then((data) => {
+          if (!cancelled) setFocusBudget(data);
+        })
+        .catch(() => {});
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [focus?.id]);
+
+  const focusTripWithBudget = useMemo(() => {
+    if (!focus) return null;
+    if (!focusBudget) return focus;
+    return {
+      ...focus,
+      plannedBudget: focusBudget.budget_cap ? Number(focusBudget.budget_cap) : 0,
+      budget: {
+        transport: Number(focusBudget.categories.transport),
+        accommodation: Number(focusBudget.categories.accommodation),
+        activities: Number(focusBudget.categories.activities),
+        meals: Number(focusBudget.categories.meals),
+        other: Number(focusBudget.categories.other),
+      },
+    };
+  }, [focus, focusBudget]);
+
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const recommended = cities.slice(0, 6);
@@ -167,33 +199,33 @@ export function DashboardPage() {
 
           <div className="space-y-4">
             <h2 className="text-xl font-bold">Budget highlights</h2>
-            {focus ? (
+            {focusTripWithBudget ? (
               <Card className="space-y-4 rounded-2xl border-border p-5 shadow-card">
                 <div>
                   <p className="text-sm text-muted-foreground">Current trip</p>
-                  <p className="font-bold">{focus.name}</p>
+                  <p className="font-bold">{focusTripWithBudget.name}</p>
                 </div>
-                <BudgetDonut trip={focus} height={200} />
+                <BudgetDonut trip={focusTripWithBudget} height={200} />
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="rounded-xl bg-secondary p-3">
                     <p className="text-xs text-muted-foreground">Planned</p>
-                    <p className="font-bold">{currency(focus.plannedBudget)}</p>
+                    <p className="font-bold">{currency(focusTripWithBudget.plannedBudget)}</p>
                   </div>
                   <div className="rounded-xl bg-secondary p-3">
                     <p className="text-xs text-muted-foreground">Remaining</p>
                     <p
                       className={`font-bold ${
-                        focus.plannedBudget - budgetTotal(focus.budget) < 0
+                        focusTripWithBudget.plannedBudget - budgetTotal(focusTripWithBudget.budget) < 0
                           ? 'text-destructive'
                           : 'text-success'
                       }`}
                     >
-                      {currency(focus.plannedBudget - budgetTotal(focus.budget))}
+                      {currency(focusTripWithBudget.plannedBudget - budgetTotal(focusTripWithBudget.budget))}
                     </p>
                   </div>
                 </div>
                 <Button asChild variant="outline" className="w-full rounded-full">
-                  <Link to={`/trips/${focus.id}`}>View trip overview</Link>
+                  <Link to={`/trips/${focusTripWithBudget.id}/budget`}>View full budget</Link>
                 </Button>
               </Card>
             ) : (

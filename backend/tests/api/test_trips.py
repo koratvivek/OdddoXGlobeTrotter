@@ -129,3 +129,36 @@ def test_list_cities_paginated(client):
     body = response.json()
     assert "items" in body
     assert "total_pages" in body
+
+
+def test_get_trip_budget(client):
+    headers = _auth_headers(client, "budget@example.com")
+    create = client.post(
+        "/api/v1/trips",
+        headers=headers,
+        json={
+            "name": "Budget Trip",
+            "start_date": "2026-10-01",
+            "end_date": "2026-10-10",
+            "budget_cap": 2000,
+        },
+    )
+    assert create.status_code == 201
+    trip_id = create.json()["id"]
+
+    response = client.get(f"/api/v1/trips/{trip_id}/budget", headers=headers)
+    assert response.status_code == 200
+    budget = response.json()
+    assert budget["trip_id"] == trip_id
+    assert budget["budget_cap"] == "2000.00"
+    
+    categories = budget["categories"]
+    assert categories["transport"] == 0
+    assert categories["meals"] == 50 * 9
+    assert categories["accommodation"] == 0
+    assert categories["activities"] == 0
+    assert categories["other"] == 0
+    
+    assert budget["total_cost"] == 50 * 9
+    assert budget["remaining_budget"] == 2000.0 - (50 * 9)
+    assert budget["is_over_budget"] is False
