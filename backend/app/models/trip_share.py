@@ -17,3 +17,4 @@ class TripShare(Base):
   )
 
   trip = relationship("Trip", back_populates="shares")
+  likes = relationship("ShareLike", back_populates="share", cascade="all, delete-orphan")
