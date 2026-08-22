@@ -217,6 +217,33 @@ Working Explore screen with city and activity search/filter against seed data, d
 | Activity catalog pagination & filters on server | Partial — full pagination in **Phase 4** backend plan |
 | Stop PATCH/DELETE/reorder API | Stubbed — **Phase 4** |
 | Trip-activity CRUD API | Stubbed — **Phase 4** |
+---
+
+## Hotfixes & UI Polish (Sidebar & Brand Logo)
+
+**Goal:** Resolve missing utility imports, fix ESLint on build output, configure the official logo brand assets, and implement collapsible sidebar navigation for desktop and mobile screen sizes.
+
+### Brand Logo & Favicon
+- Created [`frontend/public/logo.svg`](frontend/public/logo.svg) matching the brand's custom wavy earth logo.
+- Updated [`frontend/index.html`](frontend/index.html) to link `/logo.svg` as the application favicon.
+- Refactored the `Logo` component in [`frontend/src/components/gt/app-shell.jsx`](frontend/src/components/gt/app-shell.jsx) to load `/logo.svg` directly and align it horizontally with sidebar navigation items.
+
+### Collapsible Desktop Sidebar
+- Made the desktop sidebar collapsible, toggling between `w-64` and `w-20` (narrow view).
+- Hidden label descriptions and centered icons vertically when collapsed.
+- Added a floating `Button` toggle on the right edge of the sidebar border, centered vertically on the viewport (`top-1/2 -translate-y-1/2`), displaying `<` and `>` arrow icons.
+- Persisted the collapsed state in `localStorage` under `gt_sidebar_collapsed` to survive page/route changes and refreshes.
+- Custom styled CSS tooltips with pointer indicators are added to show icon names immediately on hover when collapsed.
+
+### Mobile Navigation Toggles & Backdrop
+- Replaced the mobile slide-out `Sheet` dialog component with a custom off-canvas collapsible sidebar layout.
+- Used a standard `Menu` (hamburger) icon in the header for expanding, and a `ChevronLeft` arrow inside the panel for collapsing.
+- Changed the overlay backdrop class from `bg-background/80` to `bg-black/40` so the underlying dashboard page remains visible when the mobile sidebar is active.
+
+### Build & Lint fixes
+- Created missing [`frontend/src/lib/utils.js`](frontend/src/lib/utils.js) defining the class merger `cn(...)` utility.
+- Created missing [`frontend/src/lib/apiClient.js`](frontend/src/lib/apiClient.js) implementing authenticated `fetch` wrapper and JWT session token storage.
+- Configured ESLint in [`frontend/eslint.config.js`](frontend/eslint.config.js) to ignore `dist/` and `node_modules/` folders.
 
 ---
 

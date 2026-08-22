@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   BarChart3,
-  Bell,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
