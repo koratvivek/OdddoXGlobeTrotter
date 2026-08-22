@@ -10,9 +10,11 @@ import {
   LogOut,
   Map,
   Menu,
+  Moon,
   Plus,
   Search,
   Settings,
+  Sun,
   User as UserIcon,
   Users,
 } from 'lucide-react';
@@ -27,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 
 const nav = [
@@ -110,6 +113,7 @@ function NavLinks({ onNavigate, isAdmin, hideLabels }) {
 
 export function AppShell({ children, title, subtitle, actions }) {
   const { user, ready, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
@@ -209,6 +213,14 @@ export function AppShell({ children, title, subtitle, actions }) {
                 <Link to="/explore">
                   <Search className="h-[18px] w-[18px]" />
                 </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {theme === 'dark' ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
               </Button>
               {/* <Button
                 variant="ghost"
